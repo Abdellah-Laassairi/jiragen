@@ -1,0 +1,65 @@
+site_name: JIRA Ticket Generation
+site_dir: public
+docs_dir: "docs"
+repo_url: https://github.com/Abdellah-Laassairi/jiragen
+
+nav:
+  - 🏠 Home: index.md
+
+theme:
+  name: material
+  logo: assets/logo_white.svg
+  favicon: assets/logo_light.svg
+  custom_dir: docs/overrides
+  icon:
+    repo: fontawesome/brands/gitlab
+  palette:
+    - scheme: default
+      primary: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - content.code.copy
+    - content.code.annotate
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+      default_lang: python
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+      title: On this page
+      toc_depth: 3
+  - attr_list
+  - md_in_html
+  - def_list
+
+extra_css:
+  - css/code_select.css
