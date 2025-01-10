@@ -1,6 +1,7 @@
 # Custom ignore rules
 .jiragen/
 
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -8,10 +9,6 @@ __pycache__/
 
 # C extensions
 *.so
-
-# CDK
-.cdk.staging/
-cdk.out/
 
 # Distribution / packaging
 .Python
@@ -132,3 +129,6 @@ nohup.out
 
 # Mac
 .DS_store
+
+# Ruff
+.ruff_cache/
