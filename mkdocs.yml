@@ -5,6 +5,7 @@ repo_url: https://github.com/Abdellah-Laassairi/jiragen
 
 nav:
   - 🏠 Home: index.md
+  - 🔧 CLI Reference: cli.md
 
 theme:
   name: material
