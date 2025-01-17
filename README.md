@@ -13,8 +13,6 @@
   <img src="https://img.shields.io/badge/platform-local-lightgrey" alt="Platform: Local"/>
 </p>
 
----
-
 ## 🚀 Overview
 
 **JiraGen** is a CLI designed to automate the creation of JIRA tickets through the use of Local Large Language Models (LLMs). It leverages the power of Ollama and LiteLLM to provide context-aware ticket generation, enabling efficient and effective interaction with JIRA.
@@ -25,14 +23,10 @@
 
 - [Key Features](#key-features)
 - [Quick Start](#quick-start)
-- [Architecture](#architecture)
 - [Configuration Options](#configuration-options)
 - [Template Customization](#template-customization)
-- [Performance Considerations](#performance-considerations)
 - [Contributing](#contributing)
 - [License](#license)
-
----
 
 ## 🌟 Key Features
 
@@ -41,8 +35,6 @@
 - ✨ **Customizable Templates**: Adapt ticket formats to your needs.
 - 🔧 **Metadata Extraction**: Automates technical details from codebases.
 - ⚙️ **Configurable Parameters**: Fine-tune the generation process.
-
----
 
 ## ⚡ Quick Start
 
@@ -107,19 +99,6 @@ generator = TicketGenerator(vector_store_client, config)
 ticket = generator.generate("Implement user authentication using JWT")
 ```
 
----
-
-## 🏗️ Architecture
-
-JiraGen's modular design comprises the following key components:
-
-1. **LLMConfig**: Configures and manages LLM parameters.
-2. **Vector Store**: Enables efficient context storage and retrieval.
-3. **TicketGenerator**: Coordinates the generation process.
-4. **Template System**: Ensures consistency in ticket formatting.
-
----
-
 ## ⚙️ Configuration Options
 
 JiraGen supports a variety of configuration parameters to tailor ticket generation:
@@ -133,8 +112,6 @@ LLMConfig(
     top_p=0.95,  # Nucleus sampling parameter
 )
 ```
-
----
 
 ## 📝 Template Customization
 
@@ -155,17 +132,6 @@ Technical Implementation:
 {implementation_details}
 ```
 
----
-
-## ⚡ Performance Considerations
-
-- Automatically manages context length to avoid token limits.
-- Implements fast vector similarity search for large codebases.
-- Allows batch processing for multiple tickets.
-- Provides configurable generation parameters for flexibility.
-
----
-
 ## 🤝 Contributing
 
 We ❤️ contributions! To contribute:
@@ -175,8 +141,6 @@ We ❤️ contributions! To contribute:
 3. Submit a pull request with a detailed description of your changes.
 
 For more details, refer to our [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
 
 ## 📜 License
 
