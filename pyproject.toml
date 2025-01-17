@@ -37,7 +37,7 @@ allow-direct-references = true
 files = ["requirements.txt"]
 
 [project.scripts]
-jiragen = "jiragen.cli:main"
+jiragen = "jiragen.main:main"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
