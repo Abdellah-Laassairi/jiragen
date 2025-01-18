@@ -46,11 +46,17 @@ Install JiraGen and its dependencies:
 pip install jiragen
 ```
 
-Install & runOllama to use your local LLM:
+Install & run Ollama to use your local LLM:
 
 ```bash
 curl https://ollama.ai/install.sh | sh
 ollama pull phi4  # Replace with your preferred model
+```
+
+or export your OpenAI API key:
+
+```bash
+export OPENAI_API_KEY="YOUR_API_KEY"
 ```
 
 ### Command Line Interface
