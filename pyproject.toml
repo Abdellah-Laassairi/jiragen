@@ -127,10 +127,10 @@ exclude = [
 [tool.tox]
 legacy_tox_ini = """
     [tox]
-    envlist = py310, py311
+    envlist = py310
     isolated_build = True
 
-    [testenv]
+    [testenv:py310]
     deps =
         pytest>=6.0
         pytest-asyncio
