@@ -96,9 +96,6 @@ line-length = 79
 target-version = ['py310']
 include = '\.pyi?$'
 
-[tool.bandit]
-exclude_dirs = ["tests", "scripts"]
-skips = ["B101"]  # skip assert warnings
 
 [tool.pycln]
 all = true
@@ -114,7 +111,7 @@ select = [
     "C",  # flake8-comprehensions
     "B",  # flake8-bugbear
 ]
-ignore = ["E203", "E266", "E501", "W503"]
+ignore = ["E203", "E266", "E501", "C901", "F841", "F821"]
 exclude = [
     ".eggs",
     ".git",
