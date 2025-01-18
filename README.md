@@ -1,4 +1,4 @@
-# JiraGen: Automated JIRA Ticket Generation with Local LLMs
+# JiraGen: Automated JIRA Issue Generation with Local LLMs
 
 <p align="center">
   <img src="https://img.shields.io/github/stars/Abdellah-Laassairi/jiragen?style=social" alt="GitHub Repo stars"/>
@@ -15,7 +15,7 @@
 
 ## 🚀 Overview
 
-**JiraGen** is a CLI designed to automate the creation of JIRA tickets through the use of Local Large Language Models (LLMs). It leverages the power of Ollama and LiteLLM to provide context-aware ticket generation, enabling efficient and effective interaction with JIRA.
+**Jiragen** is a CLI designed to automate the creation of JIRA Issues through the use of Local Large Language Models (LLMs). It leverages the power of Ollama and LiteLLM to provide context-aware issue generation, enabling efficient and effective interaction with JIRA. Full documentation is available [here](https://github.com/Abdellah-Laassairi/jiragen).
 
 ---
 
@@ -31,8 +31,8 @@
 ## 🌟 Key Features
 
 - 🧠 **Local LLM Integration**: Leverages Ollama and LiteLLM.
-- 🔍 **Context-Aware Tickets**: Incorporates relevant context using Vector store integration for scalable context handling.
-- ✨ **Customizable Templates**: Adapt ticket formats to your needs.
+- 🔍 **Context-Aware Issues**: Incorporates relevant context using Vector store integration for scalable context handling.
+- ✨ **Customizable Templates**: Adapt issue formats to your needs.
 - 🔧 **Metadata Extraction**: Automates technical details from codebases.
 - ⚙️ **Configurable Parameters**: Fine-tune the generation process.
 

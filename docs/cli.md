@@ -14,83 +14,236 @@ jiragen [command] [options] [arguments]
 
 ### init
 
-Initialize JiraGen configuration
+Initialize JiraGen configuration and create necessary directories.
 
 ```bash
 jiragen init
 ```
 
-This command will prompt you to enter your JIRA configuration, including URL, username, API token, default project, and default assignee.
-
-**Options:**
-- `-c, --config PATH`: Specify custom config file location
+This command will create the `.jiragen` directory and initialize the configuration file.
 
 ### generate
 
-Generate JIRA tickets
+Generate JIRA tickets using AI with context from your codebase.
 
 ```bash
-jiragen generate [OPTIONS] DESCRIPTION
+jiragen generate MESSAGE [OPTIONS]
+
+Arguments:
+  MESSAGE              : Description of the ticket to generate
 
 Options:
-  -t, --template PATH    : Custom template path
-  -m, --model NAME      : LLM model name
-  --temperature FLOAT   : Model temperature (0.0-1.0)
-  --max-tokens INT      : Maximum token limit
-  -o, --output PATH     : Output file path
+  -t, --template PATH : Path to template file (default: bundled default.md)
+  -m, --model NAME    : LLM model to use (default: openai/gpt-4o)
+  --temperature FLOAT : Model temperature (0.0-1.0) (default: 0.7)
+  --max-tokens INT    : Maximum number of tokens to generate (default: 2000)
+  -e, --editor       : Open editor for manual editing
+  -u, --upload       : Upload ticket to JIRA after generation
+  -y, --yes          : Skip all confirmations and use defaults
+```
+
+The generate command now supports an interactive workflow:
+
+1. **Content Generation**:
+   - Generates ticket content using AI
+   - Opens in editor for manual modifications (unless `-y` is used)
+   - Displays the final content
+
+2. **Metadata Extraction**:
+   - Automatically extracts metadata like issue type, priority, labels
+   - Shows extracted metadata for review
+   - Allows interactive modification (unless `-y` is used)
+
+3. **JIRA Upload** (with `-u` flag):
+   - Confirms before upload (unless `-y` is used)
+   - Validates components and other fields
+   - Shows upload status and issue link
+
+Example usage:
+
+```bash
+# Generate ticket with default settings
+jiragen generate "Add user authentication feature"
+
+# Generate and upload to JIRA with confirmation
+jiragen generate "Implement OAuth2" --upload
+
+# Generate and upload with custom model, skipping all confirmations
+jiragen generate "Fix memory leak" --model openai/gpt-4 --upload --yes
+
+# Generate with custom template and manual editing
+jiragen generate "Add dark mode" --template feature.md --editor
+```
+
+Interactive metadata editing example:
+```
+Generated Metadata:
+Issue Type: Task
+Priority: High
+Labels: frontend, UI, dark-mode
+Story Points: 5
+Components: UI
+
+Would you like to modify the metadata? [y/N]:
+```
+
+Upload confirmation example:
+```
+Do you want to upload this issue to JIRA? [Y/n]:
+✓ Successfully created Jira issue: https://your-domain.atlassian.net/browse/PROJ-123
 ```
 
 ### fetch
 
-Fetch JIRA data and store it in a separate vector store
+Fetch JIRA data and store it in a separate vector store. The command will display a progress bar while fetching and show detailed statistics upon completion.
 
 ```bash
 jiragen fetch [OPTIONS]
 
 Options:
- --all                 : Fetch all JIRA data
- --issue               : Fetch JIRA issues
- --comment             : Fetch JIRA comments
- --project             : Fetch JIRA projects
- --component           : Fetch JIRA components
- --epic                : Fetch JIRA epics
+  --types TYPE [TYPE...]  : Types of data to fetch (default: tickets, epics)
+                           Available types: epics, tickets, components
+                           Use 'all' to fetch everything
 ```
+
+Example usage:
+
+```bash
+# Fetch all JIRA data types
+jiragen fetch --types all
+
+# Fetch specific types
+jiragen fetch --types epics tickets
+```
+
+Output example:
+
+```
+    JIRA Fetch Statistics
+┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ Type       ┃ Items Fetched ┃
+┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ Epics      │            12 │
+│ Tickets    │           156 │
+│ Components │             8 │
+│ Total      │           176 │
+└────────────┴───────────────┘
+
+┌─────────── Summary ───────────────┐
+│                                  │
+│ ✨ Fetch completed successfully!  │
+│ ⏱️  Time taken: 5.23 seconds      │
+│ 📁 Data stored in: .jiragen/jira_data │
+│                                  │
+└──────────────────────────────────┘
+```
+
+The fetched data is stored in the `.jiragen/jira_data` directory, organized by type:
+
+- `.jiragen/jira_data/epics/`
+- `.jiragen/jira_data/tickets/`
+- `.jiragen/jira_data/components/`
+
+Each item is stored in both JSON and Markdown formats for easy viewing and processing.
 
 ### status
 
-Display vector store status
+Display status of files in the vector store database.
 
 ```bash
 jiragen status [OPTIONS]
 
 Options:
-  -c, --compact         : Show compact view
-  -d, --depth INT      : Set directory tree depth
+  --compact           : Show compact view with file counts
+  --depth INT        : Maximum depth of directory tree to display
 ```
 
 ### add
 
-Add files to vector store
+Add files to the vector store database.
 
 ```bash
-jiragen add [OPTIONS] PATH [PATH...]
+jiragen add PATH [PATH...]
 
-Options:
-  -r, --recursive      : Add directories recursively
-  --ignore PATTERN     : Ignore files matching pattern
+Arguments:
+  PATH               : One or more files to add to the database
 ```
 
-### remove
+### rm (remove)
 
-Remove files from vector store
+Remove files from the vector store database.
 
 ```bash
-jiragen remove [OPTIONS] PATH [PATH...]
+jiragen rm PATH [PATH...]
 
-Options:
-  -r, --recursive      : Remove directories recursively
-  --force             : Skip confirmation
+Arguments:
+  PATH               : One or more files to remove from the database
 ```
+
+### restart
+
+Restart the vector store service. Useful when you need to reset the database connection.
+
+```bash
+jiragen restart
+```
+
+### upload
+
+Upload Jira issues directly from the command line. Supports all issue types (Story, Bug, Task, Epic, etc.) and includes markdown to Jira markup conversion.
+
+```bash
+jiragen upload [OPTIONS]
+
+Required Options:
+  --title TEXT       : Issue title/summary
+
+Optional Options:
+  --description TEXT : Issue description (supports markdown format)
+  --type TEXT       : Issue type (Story, Bug, Task, Epic, etc.) (default: Story)
+  --epic KEY        : Epic key to link the issue to (e.g., ODT-123)
+  --component TEXT  : Component name to assign
+  --priority TEXT   : Priority level (Highest, High, Medium, Low, Lowest)
+  --labels TEXT     : Comma-separated list of labels
+  --assignee TEXT   : Username of the assignee
+  --reporter TEXT   : Username of the reporter
+```
+
+Example usage:
+
+```bash
+# Create a basic story
+jiragen upload --title "Implement user authentication"
+
+# Create a high-priority bug with labels
+jiragen upload \
+  --title "Fix login page crash" \
+  --type Bug \
+  --priority High \
+  --labels "bug,urgent" \
+  --assignee "john.doe"
+
+# Create an epic with markdown description
+jiragen upload \
+  --title "Q1 Feature Set" \
+  --type Epic \
+  --description "# Q1 Features\n\n## Goals\n- Implement OAuth\n- Add user profiles\n\n## Timeline\n1. January: Planning\n2. February: Development\n3. March: Testing"
+
+# Create a story linked to an epic
+jiragen upload \
+  --title "Add OAuth integration" \
+  --description "## Overview\nImplement OAuth2 authentication\n\n## Tasks\n- [ ] Research providers\n- [ ] Design flow\n- [ ] Implement" \
+  --epic ODT-123 \
+  --component "Authentication" \
+  --priority "Medium" \
+  --labels "feature,auth"
+```
+
+The upload command will:
+- Convert markdown formatting to Jira markup
+- Validate all inputs (epic, component, priority) before creating the issue
+- Handle epic links appropriately (disabled when creating epics)
+- Use project configuration from your jiragen config file
 
 ## Environment Variables
 
@@ -105,15 +258,14 @@ JIRAGEN_TEMPLATE_DIR    # Template directory path
 
 ## Exit Codes
 
-JiraGen CLI follows standard Unix exit codes:
-
 - `0`: Success
-- `1`: General error
-- `2`: Invalid command usage
-- `3`: Configuration error
-- `4`: Vector store error
-- `5`: LLM error
+- `1`: General error or operation cancelled by user
 
-This structured CLI documentation provides precise control over JiraGen's functionality while maintaining consistency with Unix command-line conventions and best practices.
+## Data Storage
 
-For programmatic interaction with the CLI, consider the exit codes when implementing automation or scripting solutions.
+JiraGen stores its data in the following locations:
+
+- `.jiragen/`: Main configuration and data directory
+  - `config.ini`: Configuration file
+  - `jira_data/`: JIRA fetched data
+  - `vector_store/`: Vector database for context storage

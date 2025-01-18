@@ -1,11 +1,27 @@
-site_name: JIRA Ticket Generation
-site_dir: public
-docs_dir: "docs"
+site_name: JiraGen
+site_description: AI-Powered JIRA Ticket Generation Tool
+site_author: Abdellah Laassairi
+site_url: https://github.com/Abdellah-Laassairi/jiragen
+repo_name: Abdellah-Laassairi/jiragen
 repo_url: https://github.com/Abdellah-Laassairi/jiragen
+edit_uri: edit/main/docs/
 
 nav:
   - 🏠 Home: index.md
-  - 🔧 CLI Reference: cli.md
+  - 📚 User Guide:
+      - 🚀 Getting Started: getting-started.md
+      - 🔧 CLI Reference: cli.md
+      - 📝 Templates: templates.md
+      - ⚙️ Configuration: configuration.md
+  - 💻 API Reference:
+      - Overview: api/index.md
+      - Core API: api/core.md
+      - CLI API: api/cli.md
+  - 🤝 Contributing:
+      - Contributing Guide: contributing.md
+      - Code of Conduct: code-of-conduct.md
+      - Development Guide: development.md
+  - 📰 Changelog: changelog.md
 
 theme:
   name: material
@@ -13,20 +29,24 @@ theme:
   favicon: assets/logo_light.svg
   custom_dir: docs/overrides
   icon:
-    repo: fontawesome/brands/gitlab
+    repo: fontawesome/brands/github
   palette:
-    - scheme: default
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
       primary: blue
+      accent: blue
       toggle:
-        icon: material/brightness-7
+        icon: material/weather-sunny
         name: Switch to dark mode
-    - scheme: slate
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
       toggle:
-        icon: material/brightness-4
+        icon: material/weather-night
         name: Switch to light mode
   features:
-    - content.code.copy
-    - content.code.annotate
+    - navigation.instant
     - navigation.tracking
     - navigation.sections
     - navigation.expand
@@ -34,12 +54,59 @@ theme:
     - search.highlight
     - search.share
     - search.suggest
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
     - toc.follow
 
 plugins:
   - search
+  - social
+  - tags
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [jiragen]
+          options:
+            docstring_style: google
+            docstring_section_style: list
+            show_root_heading: true
+            show_source: false
+            show_bases: true
+            heading_level: 3
+            members_order: source
+            show_category_heading: true
+            show_if_no_docstring: false
+            show_signature_annotations: true
+            separate_signature: true
+            unwrap_annotated: true
+            merge_init_into_class: true
+            docstring_options:
+              ignore_init_summary: true
+            filters:
+              - "!^_" # Hide private members
+              - "!^__" # Hide special members
 
 markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 4
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -47,20 +114,25 @@ markdown_extensions:
       use_pygments: true
       default_lang: python
   - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
   - pymdownx.snippets
-  - pymdownx.superfences
-  - admonition
-  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
   - pymdownx.tabbed:
       alternate_style: true
-  - tables
-  - toc:
-      permalink: true
-      title: On this page
-      toc_depth: 3
-  - attr_list
-  - md_in_html
-  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
 
-extra_css:
-  - css/code_select.css
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Abdellah-Laassairi/jiragen
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/jiragen
+
+copyright: Copyright &copy; 2025 Abdellah Laassairi
