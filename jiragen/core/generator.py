@@ -2,12 +2,9 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import litellm
 from litellm import completion
 from loguru import logger
 from pydantic import BaseModel, ConfigDict, Field
-
-litellm.set_verbose = True
 
 
 class LLMConfig(BaseModel):

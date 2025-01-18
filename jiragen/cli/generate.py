@@ -84,7 +84,6 @@ def _extract_and_display_metadata(
     extractor = IssueMetadataExtractor(llm_config)
     metadata_json = extractor.extract_metadata(content)
     logger.info(f"Successfully extracted metadata: {metadata_json}")
-    logger.info(f"Metadata type: {type(metadata_json)}")
 
     # Parse metadata from JSON string to IssueMetadata object
     if isinstance(metadata_json, str):

@@ -89,7 +89,7 @@ def main():
                 upload=args.upload,
                 yes=args.yes,
             )
-            logger.success(f"Issue generated successfully : {len(result)}")
+            logger.success(f"Issue generated successfully : {type(result)}")
 
         elif args.command == "upload":
             upload_command(
@@ -126,6 +126,13 @@ def create_parser() -> argparse.ArgumentParser:
     # Init command
     init_parser = subparsers.add_parser(
         "init", help="Initialize jiragen in the current directory"
+    )
+    init_parser.add_argument(
+        "-c",
+        "--config",
+        help="Path to config file",
+        type=Path,
+        default=Path.home() / ".jiragen" / "config.ini",
     )
 
     # Add command
@@ -229,3 +236,8 @@ def create_parser() -> argparse.ArgumentParser:
 
 if __name__ == "__main__":
     main()
+
+# TODO : fix init
+# TODO : fetch optimisation
+# TODO : vector database seperate
+# TODO : auto component fix
