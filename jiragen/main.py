@@ -11,6 +11,7 @@ from jiragen.cli.add import add_files_command
 from jiragen.cli.fetch import fetch_command
 from jiragen.cli.generate import generate_issue
 from jiragen.cli.init import init_command
+from jiragen.cli.kill import kill_command
 from jiragen.cli.restart import restart_command
 from jiragen.cli.rm import rm_files_command
 from jiragen.cli.status import status_command
@@ -43,66 +44,72 @@ def main():
         # Initialize config manager
         config_manager = ConfigManager()
 
-        # Get vector store instance
-        store = get_vector_store()
-
-        # Dispatch to appropriate command
+        # Commands that don't need vector store
         if args.command == "init":
             init_command(config_manager.config_path)
-        elif args.command == "add":
-            add_files_command(
-                store, [str(f) for f in args.files]
-            )  # Convert Path to str
-        elif args.command == "rm":
-            rm_files_command(
-                store, [str(f) for f in args.files]
-            )  # Convert Path to str
-        elif args.command == "fetch":
-            if not hasattr(args, "types"):
-                args.types = None
-            fetch_command(store, args.query, args.types)
-        elif args.command == "status":
-            status_command(store, compact=args.compact)
-        elif args.command == "restart":
-            restart_command(
-                store=store
-            )  # Pass the store instance to restart_command
-        elif args.command == "generate":
-            # Set default values if not provided
-            template_path = args.template or str(
-                Path(__file__).parent / "templates" / "default.md"
-            )
-            model = args.model or "openai/gpt-4o"
-            temperature = (
-                args.temperature if args.temperature is not None else 0.7
-            )
-            max_tokens = args.max_tokens or 2000
+        elif args.command == "kill":
+            kill_command()
+        else:
+            # Get vector store instance for commands that need it
+            store = get_vector_store()
 
-            # Generate ticket content and metadata
-            result = generate_issue(
-                store=store,
-                message=args.message,
-                template_path=template_path,
-                model=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                upload=args.upload,
-                yes=args.yes,
-            )
-            logger.success(f"Issue generated successfully : {type(result)}")
+            # Dispatch to appropriate command
+            if args.command == "add":
+                add_files_command(
+                    store, [str(f) for f in args.files]
+                )  # Convert Path to str
+            elif args.command == "rm":
+                rm_files_command(
+                    store, [str(f) for f in args.files]
+                )  # Convert Path to str
+            elif args.command == "fetch":
+                if not hasattr(args, "types"):
+                    args.types = None
+                fetch_command(store, args.query, args.types)
+            elif args.command == "status":
+                status_command(store, compact=args.compact)
+            elif args.command == "restart":
+                restart_command(
+                    store=store
+                )  # Pass the store instance to restart_command
+            elif args.command == "generate":
+                # Set default values if not provided
+                template_path = args.template or str(
+                    Path(__file__).parent / "templates" / "default.md"
+                )
+                model = args.model or "openai/gpt-4o"
+                temperature = (
+                    args.temperature if args.temperature is not None else 0.7
+                )
+                max_tokens = args.max_tokens or 2000
 
-        elif args.command == "upload":
-            upload_command(
-                title=args.title,
-                description=args.description,
-                issue_type=args.type,
-                epic_key=args.epic,
-                component_name=args.component,
-                priority=args.priority,
-                labels=args.labels,
-                assignee=args.assignee,
-                reporter=args.reporter,
-            )
+                # Generate ticket content and metadata
+                result = generate_issue(
+                    store=store,
+                    message=args.message,
+                    template_path=template_path,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    upload=args.upload,
+                    yes=args.yes,
+                )
+                logger.success(
+                    f"Issue generated successfully : {type(result)}"
+                )
+
+            elif args.command == "upload":
+                upload_command(
+                    title=args.title,
+                    description=args.description,
+                    issue_type=args.type,
+                    epic_key=args.epic,
+                    component_name=args.component,
+                    priority=args.priority,
+                    labels=args.labels,
+                    assignee=args.assignee,
+                    reporter=args.reporter,
+                )
     except KeyboardInterrupt:
         console.print("\n[yellow]Operation cancelled by user[/]")
         sys.exit(1)
@@ -169,6 +176,11 @@ def create_parser() -> argparse.ArgumentParser:
     # Restart command
     restart_parser = subparsers.add_parser(
         "restart", help="Restart the vector store"
+    )
+
+    # Kill command
+    kill_parser = subparsers.add_parser(
+        "kill", help="Kill the vector store service"
     )
 
     # Generate command

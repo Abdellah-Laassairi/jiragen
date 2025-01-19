@@ -114,11 +114,26 @@ class VectorStoreClient:
     def restart(self) -> None:
         """Restart the vector store service."""
         try:
-            self._send_command("restart")
+            config = {
+                "repo_path": str(self.config.repo_path),
+                "collection_name": self.config.collection_name,
+                "model_name": self.config.embedding_model,
+            }
+            self.send_command("restart", params=config)
         except Exception as e:
             logger.exception("Failed to restart vector store service")
             raise Exception(
                 f"Failed to restart vector store service: {str(e)}"
+            ) from e
+
+    def kill(self) -> None:
+        """Kill the vector store service."""
+        try:
+            self.send_command("kill")
+        except Exception as e:
+            logger.exception("Failed to kill vector store service")
+            raise Exception(
+                f"Failed to kill vector store service: {str(e)}"
             ) from e
 
     def send_command(

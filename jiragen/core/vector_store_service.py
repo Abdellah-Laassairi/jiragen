@@ -343,15 +343,36 @@ class VectorStoreService:
             ]:
                 response = {"error": "Service not initialized"}
             elif command == "get_stored_files":
-                logger.debug("Recieved :  get_stored_files command")
+                logger.debug("Received: get_stored_files command")
                 response = self.handle_get_stored_files()
             elif command == "add_files":
                 response = self.handle_add_files(params)
             elif command == "remove_files":
-                logger.debug("Recieved :  remove_files command")
+                logger.debug("Received: remove_files command")
                 response = self.handle_remove_files(params)
             elif command == "query_similar":
                 response = self.handle_query_similar(params)
+            elif command == "restart":
+                logger.info("Handling restart command")
+                self.cleanup()
+                self.initialized = False
+                self.initialize_store(params)
+                response = {
+                    "status": "success",
+                    "message": "Service restarted successfully",
+                }
+            elif command == "kill":
+                logger.info("Handling kill command")
+                response = {
+                    "status": "success",
+                    "message": "Service shutting down",
+                }
+                # Send response before cleanup
+                serialized_response = pickle.dumps(response)
+                conn.sendall(serialized_response)
+                # Cleanup and exit
+                self.cleanup()
+                sys.exit(0)
             else:
                 response = {"error": f"Unknown command: {command}"}
 
