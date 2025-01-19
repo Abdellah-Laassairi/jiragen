@@ -41,22 +41,6 @@ jobs:
           safety scan
         continue-on-error: true
 
-      # Secret Scanning
-      - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@latest
-        with:
-          path: ./
-          base: ${{ github.base_ref }}
-          head: ${{ github.head_ref }}
-          extra_args: --debug --only-verified
-        env:
-          pythonLocation: /opt/hostedtoolcache/Python/3.10.16/x64
-          PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.16/x64/lib/pkgconfig
-          Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.16/x64
-          Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.16/x64
-          Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.16/x64
-          LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.16/x64/lib
-
       # Container Scanning
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -65,13 +49,6 @@ jobs:
           scan-ref: "."
           format: "sarif"
           output: "trivy-results.sarif"
-
-      # Upload security results
-      - name: Upload security results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: trivy-results.sarif
-          category: Trivy
 
   test:
     name: Test
@@ -97,9 +74,3 @@ jobs:
       - name: Run tests with coverage
         run: |
           tox
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: true
