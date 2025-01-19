@@ -49,7 +49,7 @@ version_files = ["pyproject.toml:^version"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --cov=jiragen --cov-report=xml --cov-report=term-missing"
+addopts = "--cov --cov-report term --cov-report xml:coverage.xml --html=report.html"
 testpaths = [
     "tests",
 ]
@@ -133,9 +133,9 @@ legacy_tox_ini = """
     [testenv:py310]
     deps =
         pytest>=6.0
-        pytest-asyncio
         pytest-cov
         pytest-sugar
     commands =
-        pytest {posargs:tests}
+      pytest --cov --cov-report=xml --cov-config=pyproject.toml --cov-branch
+
 """
