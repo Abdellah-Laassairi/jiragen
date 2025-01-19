@@ -96,7 +96,6 @@ line-length = 79
 target-version = ['py310']
 include = '\.pyi?$'
 
-
 [tool.pycln]
 all = true
 
@@ -135,7 +134,8 @@ legacy_tox_ini = """
         pytest>=6.0
         pytest-cov
         pytest-sugar
+        pytest-html
     commands =
-      pytest --cov --cov-report=xml --cov-config=pyproject.toml --cov-branch
+      pytest --cov --cov-report=xml --cov-config=pyproject.toml --cov-branch --html=report.html
 
 """
