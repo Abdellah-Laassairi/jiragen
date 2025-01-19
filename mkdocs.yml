@@ -4,7 +4,6 @@ site_author: Abdellah Laassairi
 site_url: https://github.com/Abdellah-Laassairi/jiragen
 repo_name: Abdellah-Laassairi/jiragen
 repo_url: https://github.com/Abdellah-Laassairi/jiragen
-edit_uri: edit/main/docs/
 
 nav:
   - 🏠 Home: index.md

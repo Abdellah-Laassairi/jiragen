@@ -1,0 +1,51 @@
+/* Prevent selection of prompts and output in Python console blocks */
+.highlight .gp, .highlight .go { /* Generic.Prompt, Generic.Output */
+    user-select: none;
+}
+
+/* Improve code block readability */
+.highlight pre {
+    padding: 1em;
+    border-radius: 4px;
+}
+
+/* Hide redundant docstrings in source code */
+.doc-contents details .highlight code {
+    line-height: 1.5;
+}
+
+.doc-contents details .highlight code > .sd {  /* Literal.String.Doc */
+    opacity: 0.7;
+    font-style: italic;
+}
+
+/* Improve type annotation readability */
+.doc-type {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+/* Better spacing for method descriptions */
+.doc-contents {
+    margin-top: 1em;
+    margin-bottom: 2em;
+}
+
+/* Improve parameter list readability */
+.doc-param-name {
+    font-weight: bold;
+}
+
+.doc-param-type {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+/* Better navigation styling */
+.md-nav__link {
+    padding: 0.2em 0;
+}
+
+.md-nav__link--active {
+    font-weight: bold;
+}
