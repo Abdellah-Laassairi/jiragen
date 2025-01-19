@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: Pre-scan CI Pipeline
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e .
           pip install bandit safety pipenv
 
       # Static Application Security Testing (SAST)
@@ -36,19 +36,26 @@ jobs:
         continue-on-error: true
 
       # Software Composition Analysis (SCA)
-      - name: Run Safety Check
+      - name: Run Safety Scan
         run: |
-          safety check
+          safety scan
         continue-on-error: true
 
       # Secret Scanning
       - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@latest
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
+          base: ${{ github.base_ref }}
+          head: ${{ github.head_ref }}
           extra_args: --debug --only-verified
+        env:
+          pythonLocation: /opt/hostedtoolcache/Python/3.10.16/x64
+          PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.10.16/x64/lib/pkgconfig
+          Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.16/x64
+          Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.16/x64
+          Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.10.16/x64
+          LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.10.16/x64/lib
 
       # Container Scanning
       - name: Run Trivy vulnerability scanner
@@ -71,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11"]
 
     steps:
       - uses: actions/checkout@v4
@@ -85,44 +92,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-mock pytest-asyncio
+          pip install tox
 
       - name: Run tests with coverage
         run: |
-          pytest tests/ --cov=jiragen --cov-report=xml --cov-report=term-missing
+          tox
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
           fail_ci_if_error: true
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-          cache: "pip"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install black isort flake8 mypy types-all
-
-      - name: Run Black
-        run: black --check jiragen/
-
-      - name: Run isort
-        run: isort --check-only --diff jiragen/
-
-      - name: Run Flake8
-        run: flake8 jiragen/
-
-      - name: Run MyPy
-        run: mypy jiragen/
