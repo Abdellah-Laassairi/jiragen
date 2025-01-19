@@ -12,6 +12,6 @@ This document outlines the configuration settings for the Jiragen project.
 
 ## Configuration Files
 
-- `config.yaml`: Main configuration file for the project.
+- `config.ini`: Main configuration file for the project.
 
 Ensure that all configuration settings are properly documented and up-to-date.

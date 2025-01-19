@@ -1,44 +1,49 @@
-# JiraGen: AI-Powered JIRA Ticket Generation
+# JiraGen: AI-Powered JIRA Issue Generation
 
-JiraGen is a powerful command-line tool that leverages AI to generate high-quality JIRA tickets with context from your codebase. It streamlines the ticket creation process by automatically extracting relevant metadata and providing an interactive workflow for ticket refinement.
+JiraGen is a powerful command-line tool that leverages AI to generate high-quality JIRA isses with context from your codebase. It streamlines the isse creation process by automatically extracting relevant metadata and providing an interactive workflow for isse refinement.
 
 ## Features
 
-- **AI-Powered Generation**: Uses advanced language models (OpenAI GPT-4 by default) to generate detailed ticket descriptions
+- **AI-Powered Generation**: Uses advanced language models (OpenAI GPT-4 by default) to generate detailed isse descriptions
 - **Codebase Context**: Incorporates relevant code snippets and documentation from your codebase
 - **Interactive Workflow**: Edit content and metadata before uploading
 - **Smart Metadata**: Automatically extracts issue type, priority, labels, and components
-- **JIRA Integration**: Seamlessly upload tickets to your JIRA instance
+- **JIRA Integration**: Seamlessly upload isses to your JIRA instance
 - **Fast & Efficient**: Vector store-based search for quick context retrieval
-- **Template Support**: Customizable templates for consistent ticket format
+- **Template Support**: Customizable templates for consistent isse format
 
 ## Quick Start
 
 1. Install JiraGen:
+
 ```bash
 pip install jiragen
 ```
 
 2. Initialize in your project:
+
 ```bash
 jiragen init
 ```
 
 3. Add your codebase to the vector store:
+
 ```bash
 jiragen add .
 ```
 
-4. Generate a ticket:
+4. Generate a isse:
+
 ```bash
 jiragen generate "Add dark mode support" --upload
 ```
 
 ## Example Usage
 
-### Basic Ticket Generation
+### Basic isse Generation
+
 ```bash
-# Generate a ticket with default settings
+# Generate a isse with default settings
 jiragen generate "Implement user authentication"
 
 # Generate and upload with automatic metadata
@@ -49,6 +54,7 @@ jiragen generate "Add OAuth support" --model openai/gpt-4 --template feature.md
 ```
 
 ### Interactive Features
+
 - Edit generated content in your preferred editor
 - Review and modify extracted metadata
 - Confirm before uploading to JIRA
@@ -56,6 +62,7 @@ jiragen generate "Add OAuth support" --model openai/gpt-4 --template feature.md
 ## Configuration
 
 JiraGen can be configured through:
+
 - Command-line arguments
 - Configuration file (`~/.jiragen/config.ini`)
 - Environment variables

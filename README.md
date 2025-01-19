@@ -1,8 +1,6 @@
 # JiraGen: Automated JIRA Issue Generation
 
 <p align="center">
-  <img src="https://img.shields.io/github/stars/Abdellah-Laassairi/jiragen?style=social" alt="GitHub Repo stars"/>
-  <img src="https://img.shields.io/github/forks/Abdellah-Laassairi/jiragen?style=social" alt="GitHub Repo forks"/>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"/>
   </a>
