@@ -675,6 +675,7 @@ class JiraDataManager:
         logger.debug(f"Processing data types: {data_types}")
 
         results = {}
+        progress_callback = getattr(self, "progress_callback", None)
 
         for data_type in data_types:
             if data_type not in self.fetchers:
@@ -686,7 +687,10 @@ class JiraDataManager:
 
             try:
                 # Fetch items from JIRA
-                items = fetcher.fetch()
+                items = list(
+                    fetcher.fetch()
+                )  # Convert to list to get total count
+                total_items = len(items)
 
                 # Prepare output directory
                 data_dir = self._ensure_directory(
@@ -713,6 +717,16 @@ class JiraDataManager:
                             vector_store.add_files([md_path])
 
                         processed_count += 1
+
+                        # Update progress if callback is provided
+                        if progress_callback:
+                            progress = (processed_count / total_items) * 100
+                            progress_callback(
+                                data_type,
+                                progress,
+                                processed_count,
+                                total_items,
+                            )
 
                     except Exception as e:
                         logger.error(

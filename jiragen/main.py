@@ -63,9 +63,10 @@ def main():
                     store, [str(f) for f in args.files]
                 )  # Convert Path to str
             elif args.command == "fetch":
-                if not hasattr(args, "types"):
-                    args.types = None
-                fetch_command(store, args.query, args.types)
+                if not hasattr(args, "types") or args.types is None:
+                    args.types = []
+                query = getattr(args, "query", None)
+                fetch_command(config_manager, query, args.types)
             elif args.command == "status":
                 status_command(store, compact=args.compact)
             elif args.command == "restart":
@@ -160,9 +161,16 @@ def create_parser() -> argparse.ArgumentParser:
     fetch_parser = subparsers.add_parser(
         "fetch", help="Search for relevant code snippets"
     )
-    fetch_parser.add_argument("query", help="Search query")
     fetch_parser.add_argument(
-        "--types", nargs="+", help="Filter by file types"
+        "query",
+        nargs="?",
+        default=None,
+        help="Search query. If not provided, fetches all data",
+    )
+    fetch_parser.add_argument(
+        "--types",
+        nargs="+",
+        help="Filter by file types (e.g., epics, tickets, components). If not provided, fetches all types",
     )
 
     # Status command
