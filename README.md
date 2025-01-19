@@ -1,4 +1,4 @@
-# JiraGen: Automated JIRA Issue Generation with Local LLMs
+# JiraGen: Automated JIRA Issue Generation
 
 <p align="center">
   <img src="https://img.shields.io/github/stars/Abdellah-Laassairi/jiragen?style=social" alt="GitHub Repo stars"/>
@@ -83,7 +83,7 @@ jiragen status --depth 2          # Limit directory tree depth
 
 # Vector store operations
 jiragen add path/to/files         # Add files to vector store
-jiragen remove path/to/files      # Remove files from vector store
+jiragen rm path/to/files      # Remove files from vector store
 ```
 
 ### API Usage
@@ -113,9 +113,9 @@ JiraGen supports a variety of configuration parameters to tailor ticket generati
 LLMConfig(
     model="llama2",  # Ollama model to use
     api_base="http://localhost:11434",  # Ollama endpoint
-    max_tokens=2000,  # Maximum response length
-    temperature=0.7,  # Generation creativity
-    top_p=0.95,  # Nucleus sampling parameter
+    max_tokens=2000,
+    temperature=0.7,
+    top_p=0.95,
 )
 ```
 
