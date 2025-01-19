@@ -25,6 +25,11 @@ def find_service_pid() -> list[int]:
 def kill_command() -> None:
     """Kill the vector store service."""
     try:
+        # Get runtime directory
+        runtime_dir = Path.home() / ".jiragen"
+        socket_path = runtime_dir / "vector_store.sock"
+        lock_file = runtime_dir / "vector_store.lock"
+
         # Find service PIDs
         pids = find_service_pid()
 
@@ -32,8 +37,30 @@ def kill_command() -> None:
             logger.info("No vector store service processes found")
             return
 
-        # Kill each process
-        for pid in pids:
+        # First try graceful shutdown
+        if socket_path.exists():
+            try:
+                import pickle
+                import socket
+
+                sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                sock.settimeout(2)  # 2 second timeout
+                sock.connect(str(socket_path))
+                request = {"command": "kill"}
+                sock.sendall(pickle.dumps(request))
+                sock.close()
+                logger.debug("Sent kill command to service")
+            except Exception as e:
+                logger.debug(f"Failed to send kill command: {e}")
+
+        # Wait a bit for graceful shutdown
+        import time
+
+        time.sleep(1)
+
+        # Kill remaining processes
+        remaining_pids = find_service_pid()
+        for pid in remaining_pids:
             try:
                 os.kill(pid, signal.SIGTERM)
                 logger.info(f"Sent SIGTERM to process {pid}")
@@ -42,11 +69,28 @@ def kill_command() -> None:
             except Exception as e:
                 logger.error(f"Error killing process {pid}: {e}")
 
-        # Clean up socket file if it exists
-        socket_path = Path.home() / ".jiragen" / "vector_store.sock"
-        if socket_path.exists():
-            socket_path.unlink()
-            logger.debug("Removed socket file")
+        # Wait for processes to terminate
+        time.sleep(1)
+
+        # Force kill any remaining processes
+        remaining_pids = find_service_pid()
+        for pid in remaining_pids:
+            try:
+                os.kill(pid, signal.SIGKILL)
+                logger.info(f"Sent SIGKILL to process {pid}")
+            except ProcessLookupError:
+                pass
+            except Exception as e:
+                logger.error(f"Error force killing process {pid}: {e}")
+
+        # Clean up socket and lock files if they exist
+        for file_path in [socket_path, lock_file]:
+            if file_path.exists():
+                try:
+                    file_path.unlink()
+                    logger.debug(f"Removed {file_path.name}")
+                except Exception as e:
+                    logger.error(f"Error removing {file_path.name}: {e}")
 
         logger.info("Vector store service killed successfully")
     except Exception as e:

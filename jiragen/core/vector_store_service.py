@@ -29,6 +29,7 @@ class VectorStoreService:
     def __init__(self, socket_path: Path, runtime_dir: Path):
         self.socket_path = socket_path
         self.runtime_dir = runtime_dir
+        self.lock_file = runtime_dir / "vector_store.lock"
         self.running = False
         self.sock = None
         self.client = None
@@ -42,6 +43,27 @@ class VectorStoreService:
         logger.info(f"Starting vector store service, PID: {os.getpid()}")
 
         self.runtime_dir.mkdir(parents=True, exist_ok=True)
+
+        # Check for existing lock file
+        if self.lock_file.exists():
+            try:
+                with open(self.lock_file) as f:
+                    pid = int(f.read().strip())
+                if os.path.exists(f"/proc/{pid}"):
+                    raise RuntimeError(
+                        f"Another service instance is already running with PID {pid}"
+                    )
+                logger.warning(
+                    f"Found stale lock file for PID {pid}, removing it"
+                )
+                self.lock_file.unlink()
+            except ValueError:
+                logger.warning("Invalid lock file found, removing it")
+                self.lock_file.unlink()
+
+        # Create lock file
+        with open(self.lock_file, "w") as f:
+            f.write(str(os.getpid()))
 
         # Set up signal handlers
         signal.signal(signal.SIGTERM, self.handle_shutdown)
@@ -419,6 +441,8 @@ class VectorStoreService:
                 self.sock.close()
             if self.socket_path.exists():
                 self.socket_path.unlink()
+            if self.lock_file.exists():
+                self.lock_file.unlink()
             logger.info("Vector store service cleaned up")
         except Exception as e:
             logger.error(f"Error during cleanup: {str(e)}")
