@@ -8,6 +8,7 @@ from loguru import logger
 from rich.console import Console
 
 from jiragen.cli.add import add_files_command
+from jiragen.cli.clean import clean_command
 from jiragen.cli.fetch import fetch_command
 from jiragen.cli.generate import generate_issue
 from jiragen.cli.init import init_command
@@ -62,6 +63,8 @@ def main():
                 rm_files_command(
                     store, [str(f) for f in args.files]
                 )  # Convert Path to str
+            elif args.command == "clean":
+                clean_command(store)
             elif args.command == "fetch":
                 if not hasattr(args, "types") or args.types is None:
                     args.types = []
@@ -155,6 +158,11 @@ def create_parser() -> argparse.ArgumentParser:
     )
     rm_parser.add_argument(
         "files", nargs="+", type=Path, help="Files to remove"
+    )
+
+    # Clean command
+    clean_parser = subparsers.add_parser(
+        "clean", help="Remove all files from the vector store"
     )
 
     # Fetch command
