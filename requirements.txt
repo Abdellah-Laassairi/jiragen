@@ -9,6 +9,7 @@ requests>=2.31.0
 charset-normalizer>=3.0.0
 loguru==0.7.2
 pathspec==0.12.1
+litellm==1.55.12
+
 chromadb
 sentence-transformers
-litellm
