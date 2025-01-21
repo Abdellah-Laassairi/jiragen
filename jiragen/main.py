@@ -4,7 +4,6 @@ import argparse
 import sys
 from pathlib import Path
 
-from loguru import logger
 from rich.console import Console
 
 from jiragen.cli.add import add_files_command
@@ -17,8 +16,9 @@ from jiragen.cli.restart import restart_command
 from jiragen.cli.rm import rm_files_command
 from jiragen.cli.status import status_command
 from jiragen.cli.upload import upload_command
+from jiragen.core.client import VectorStoreClient, VectorStoreConfig
 from jiragen.core.config import ConfigManager
-from jiragen.core.vector_store import VectorStoreClient, VectorStoreConfig
+from jiragen.utils.logger import logger
 
 console = Console()
 
@@ -38,7 +38,7 @@ def main():
         args = parser.parse_args()
 
         # Setup logging based on verbosity
-        from jiragen.utils.misc import setup_logging
+        from jiragen.utils.logger import setup_logging
 
         setup_logging(args.verbose)
 
@@ -125,18 +125,25 @@ def main():
 
 def create_parser() -> argparse.ArgumentParser:
     """Create and return the command line argument parser."""
-    parser = argparse.ArgumentParser(
-        description="jiragen - AI-powered JIRA ticket generator"
-    )
-    parser.add_argument(
+    # Create parent parser with common arguments
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose logging"
+    )
+
+    # Main parser
+    parser = argparse.ArgumentParser(
+        description="jiragen - AI-powered JIRA ticket generator",
+        parents=[parent_parser],
     )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Init command
     init_parser = subparsers.add_parser(
-        "init", help="Initialize jiragen in the current directory"
+        "init",
+        help="Initialize jiragen in the current directory",
+        parents=[parent_parser],
     )
     init_parser.add_argument(
         "-c",
@@ -148,13 +155,17 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Add command
     add_parser = subparsers.add_parser(
-        "add", help="Add files to the vector store"
+        "add",
+        help="Add files to the vector store",
+        parents=[parent_parser],
     )
     add_parser.add_argument("files", nargs="+", type=Path, help="Files to add")
 
     # Remove command
     rm_parser = subparsers.add_parser(
-        "rm", help="Remove files from the vector store"
+        "rm",
+        help="Remove files from the vector store",
+        parents=[parent_parser],
     )
     rm_parser.add_argument(
         "files", nargs="+", type=Path, help="Files to remove"
@@ -162,12 +173,16 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Clean command
     clean_parser = subparsers.add_parser(
-        "clean", help="Remove all files from the vector store"
+        "clean",
+        help="Remove all files from the vector store",
+        parents=[parent_parser],
     )
 
     # Fetch command
     fetch_parser = subparsers.add_parser(
-        "fetch", help="Search for relevant code snippets"
+        "fetch",
+        help="Search for relevant code snippets",
+        parents=[parent_parser],
     )
     fetch_parser.add_argument(
         "query",
@@ -183,7 +198,9 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Status command
     status_parser = subparsers.add_parser(
-        "status", help="Show vector store status"
+        "status",
+        help="Show vector store status",
+        parents=[parent_parser],
     )
     status_parser.add_argument(
         "-c", "--compact", action="store_true", help="Show compact status"
@@ -191,17 +208,23 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Restart command
     restart_parser = subparsers.add_parser(
-        "restart", help="Restart the vector store"
+        "restart",
+        help="Restart the vector store",
+        parents=[parent_parser],
     )
 
     # Kill command
     kill_parser = subparsers.add_parser(
-        "kill", help="Kill the vector store service"
+        "kill",
+        help="Kill the vector store service",
+        parents=[parent_parser],
     )
 
     # Generate command
     generate_parser = subparsers.add_parser(
-        "generate", help="Generate a JIRA ticket"
+        "generate",
+        help="Generate a JIRA ticket",
+        parents=[parent_parser],
     )
     generate_parser.add_argument(
         "message", help="Description of the ticket to generate"
@@ -237,7 +260,9 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Upload command
     upload_parser = subparsers.add_parser(
-        "upload", help="Upload a ticket to JIRA"
+        "upload",
+        help="Upload a ticket to JIRA",
+        parents=[parent_parser],
     )
     upload_parser.add_argument("title", help="Ticket title/summary")
     upload_parser.add_argument("description", help="Ticket description")
@@ -265,7 +290,12 @@ def create_parser() -> argparse.ArgumentParser:
 if __name__ == "__main__":
     main()
 
-# TODO : fix init
-# TODO : fetch optimisation
-# TODO : vector database seperate
-# TODO : auto component fix
+# TODO : Fix init
+# TODO : Fix cli & logs and clean it
+# TODO : fetch optimisation & fix bug
+# TODO : Automatic title generation too
+# TODO : Fix component name and other metadata extraction
+# TODO : Vector database seperation
+# TODO : .gitignore
+# TODO : global ignore pathspec rules
+# TODO : performance optimization
