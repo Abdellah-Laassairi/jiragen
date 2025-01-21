@@ -10,7 +10,7 @@ This section documents the command-line interface components of JiraGen. These c
 !!! example "Usage Example"
     ```python
     from jiragen.cli.generate import generate_issue
-    from jiragen.core.vector_store import VectorStoreClient
+    from jiragen.core.client import VectorStoreClient
 
     # Initialize vector store
     store = VectorStoreClient()

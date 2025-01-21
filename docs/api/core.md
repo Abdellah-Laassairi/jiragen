@@ -9,21 +9,21 @@ This section documents the core components of JiraGen. These components form the
 
 ### VectorStoreConfig
 
-::: jiragen.core.vector_store.VectorStoreConfig
+::: jiragen.core.client.VectorStoreConfig
     rendering:
       show_root_heading: true
       show_source: false
 
 ### VectorStoreClient
 
-::: jiragen.core.vector_store.VectorStoreClient
+::: jiragen.core.client.VectorStoreClient
     rendering:
       show_root_heading: true
       show_source: false
 
 ### VectorStoreService
 
-::: jiragen.core.vector_store_service.VectorStoreService
+::: jiragen.services.vector_store.VectorStoreService
     rendering:
       show_root_heading: true
       show_source: false

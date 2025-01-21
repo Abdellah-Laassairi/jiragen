@@ -41,7 +41,7 @@ graph TD
 Here's a simple example of using JiraGen's API to generate and upload a ticket:
 
 ```python
-from jiragen.core.vector_store import VectorStoreClient
+from jiragen.core.client import VectorStoreClient
 from jiragen.cli.generate import generate_issue
 from jiragen.cli.upload import upload_command
 
