@@ -4,6 +4,8 @@ import configparser
 from pathlib import Path
 from typing import Optional
 
+from jiragen.utils.data import get_config_dir, get_data_dir
+
 DEFAULT_CONFIG = {
     "JIRA": {
         "url": "",
@@ -11,7 +13,15 @@ DEFAULT_CONFIG = {
         "api_token": "",
         "default_project": "",
         "default_assignee": "",
-    }
+    },
+    "llm": {
+        "model": "openai/gpt-4o",
+        "temperature": "0.7",
+        "max_tokens": "2000",
+    },
+    "vector_store": {
+        "path": str(get_data_dir() / "vector_store"),
+    },
 }
 
 
@@ -23,11 +33,14 @@ class ConfigManager:
 
         Args:
             config_path: Optional path to config file. If not provided,
-                       defaults to ~/.jiragen/config.ini
+                       defaults to standard config location based on OS.
         """
-        self.config_path = (
-            config_path or Path.home() / ".jiragen" / "config.ini"
-        )
+        if config_path is None:
+            config_dir = get_config_dir()
+            config_path = config_dir / "config.ini"
+
+        # Resolve home directory if present
+        self.config_path = config_path.expanduser()
         self.config = configparser.ConfigParser()
 
         # Create config directory if it doesn't exist

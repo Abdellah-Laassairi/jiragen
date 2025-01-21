@@ -9,6 +9,9 @@ from typing import Any, Dict, List, Set
 from loguru import logger
 from pydantic import BaseModel, ConfigDict
 
+from jiragen.core.config import get_data_dir
+from jiragen.utils.data import get_runtime_dir
+
 MAX_RETRIES = 3
 SOCKET_TIMEOUT = 15  # 15 seconds timeout
 GET_FILES_TIMEOUT = 20  # 20 seconds for get_stored_files
@@ -16,7 +19,7 @@ BUFFER_SIZE = 16384  # 16KB buffer size
 
 
 class VectorStoreConfig(BaseModel):
-    repo_path: Path
+    repo_path: Path = get_data_dir()
     collection_name: str = "repository_content"
     embedding_model: str = "all-MiniLM-L6-v2"
     device: str = "cpu"  # Default to CPU for stability
@@ -25,11 +28,16 @@ class VectorStoreConfig(BaseModel):
         arbitrary_types_allowed=True, protected_namespaces=()
     )
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        # Ensure repo_path is expanded
+        self.repo_path = self.repo_path.expanduser()
+
 
 class VectorStoreClient:
     def __init__(self, config: VectorStoreConfig):
         self.config = config
-        self.runtime_dir = Path.home() / ".jiragen"
+        self.runtime_dir = get_runtime_dir()
         self.socket_path = self.runtime_dir / "vector_store.sock"
         self.ensure_service_running()
         self.initialize_store()

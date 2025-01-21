@@ -14,10 +14,12 @@ console = Console()
 
 
 def prompt_for_config() -> dict:
-    """Prompt user for JIRA configuration values."""
-    console.print("\n[bold]Please enter your JIRA configuration:[/]")
+    """Prompt user for configuration values."""
+    config = {}
 
-    config_fields = {
+    # JIRA Configuration
+    console.print("\n[bold cyan]JIRA Configuration:[/]")
+    jira_fields = {
         "url": "JIRA URL (e.g., https://your-domain.atlassian.net)",
         "username": "Username (usually your email)",
         "api_token": "API Token",
@@ -25,12 +27,10 @@ def prompt_for_config() -> dict:
         "default_assignee": "Default Assignee",
     }
 
-    config_values = {}
-    for field, prompt in config_fields.items():
-        # Check for environment variables first
+    for field, prompt in jira_fields.items():
         env_var = f"JIRAGEN_{field.upper()}"
         if os.getenv(env_var):
-            config_values[field] = os.getenv(env_var)
+            config[("JIRA", field)] = os.getenv(env_var)
             console.print(
                 f"[green]Using {field} from environment variable {env_var}[/]"
             )
@@ -39,28 +39,83 @@ def prompt_for_config() -> dict:
         while True:
             value = console.input(f"{prompt}: ")
             if value.strip() or Confirm.ask(f"Leave {field} empty?"):
-                config_values[field] = value
+                config[("JIRA", field)] = value
                 break
             console.print(
                 "[yellow]This field cannot be empty. Please provide a value.[/]"
             )
 
-    return config_values
+    # LLM Configuration
+    console.print("\n[bold cyan]LLM Configuration:[/]")
+    llm_fields = {
+        "model": ("Model name (default: openai/gpt-4o)", "openai/gpt-4o"),
+        "temperature": ("Temperature (0.0-1.0, default: 0.7)", "0.7"),
+        "max_tokens": ("Maximum tokens (default: 2000)", "2000"),
+    }
+
+    for field, (prompt, default) in llm_fields.items():
+        env_var = f"JIRAGEN_LLM_{field.upper()}"
+        if os.getenv(env_var):
+            config[("llm", field)] = os.getenv(env_var)
+            console.print(
+                f"[green]Using {field} from environment variable {env_var}[/]"
+            )
+            continue
+
+        value = console.input(f"{prompt}: ")
+        config[("llm", field)] = value if value.strip() else default
+
+    # Vector Store Configuration
+    console.print("\n[bold cyan]Vector Store Configuration:[/]")
+    vector_store_fields = {
+        "path": (
+            "Vector store path (default: .jiragen/vector_store)",
+            ".jiragen/vector_store",
+        ),
+    }
+
+    for field, (prompt, default) in vector_store_fields.items():
+        env_var = f"JIRAGEN_VECTOR_STORE_{field.upper()}"
+        if os.getenv(env_var):
+            config[("vector_store", field)] = os.getenv(env_var)
+            console.print(
+                f"[green]Using {field} from environment variable {env_var}[/]"
+            )
+            continue
+
+        value = console.input(f"{prompt}: ")
+        config[("vector_store", field)] = value if value.strip() else default
+
+    return config
 
 
 def validate_config(config: configparser.ConfigParser) -> bool:
     """Validate configuration file format and required sections."""
-    if "JIRA" not in config:
-        return False
-
-    required_fields = {
-        "url",
-        "username",
-        "api_token",
-        "default_project",
-        "default_assignee",
+    required_sections = {
+        "JIRA": {
+            "url",
+            "username",
+            "api_token",
+            "default_project",
+            "default_assignee",
+        },
+        "llm": {
+            "model",
+            "temperature",
+            "max_tokens",
+        },
+        "vector_store": {
+            "path",
+        },
     }
-    return all(field in config["JIRA"] for field in required_fields)
+
+    for section, fields in required_sections.items():
+        if section not in config:
+            return False
+        if not all(field in config[section] for field in fields):
+            return False
+
+    return True
 
 
 def init_command(config_path: Path) -> None:
@@ -94,14 +149,22 @@ def init_command(config_path: Path) -> None:
                     console.print("[yellow]Using existing configuration.[/]")
                     return
 
-        # Get configuration values
+        # Get all configuration values
         config_values = prompt_for_config()
 
         # Create config directory if it doesn't exist
         config_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Update configuration
-        config_manager.update_config("JIRA", **config_values)
+        # Group config values by section and update
+        grouped_config = {}
+        for (section, key), value in config_values.items():
+            if section not in grouped_config:
+                grouped_config[section] = {}
+            grouped_config[section][key] = value
+
+        # Update configuration for each section
+        for section, values in grouped_config.items():
+            config_manager.update_config(section, **values)
 
         console.print(
             f"\n[green]Configuration initialized successfully at {config_path}[/]"
@@ -109,10 +172,13 @@ def init_command(config_path: Path) -> None:
 
         # Display the configuration
         console.print("\n[bold]Current configuration:[/]")
-        for key, value in config_values.items():
-            if key == "api_token":
-                value = "*" * len(value) if value else ""
-            console.print(f"{key}: {value}")
+
+        for section, values in grouped_config.items():
+            console.print(f"\n[cyan]{section} Configuration:[/]")
+            for key, value in values.items():
+                if section == "JIRA" and key == "api_token":
+                    value = "*" * len(value) if value else ""
+                console.print(f"{key}: {value}")
 
     except Exception as e:
         console.print(f"[red]Error initializing configuration: {str(e)}[/]")

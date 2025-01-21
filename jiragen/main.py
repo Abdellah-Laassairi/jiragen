@@ -19,6 +19,7 @@ from jiragen.cli.status import status_command
 from jiragen.cli.upload import upload_command
 from jiragen.core.client import VectorStoreClient, VectorStoreConfig
 from jiragen.core.config import ConfigManager
+from jiragen.utils.data import get_data_dir
 from jiragen.utils.logger import logger, setup_logging
 
 console = Console()
@@ -26,9 +27,7 @@ console = Console()
 
 def get_vector_store() -> VectorStoreClient:
     """Initialize and return a VectorStoreClient instance."""
-    config = VectorStoreConfig(
-        repo_path=Path(".jiragen"), collection_name="code_content"
-    )
+    config = VectorStoreConfig()  # Uses default path from get_data_dir()
     return VectorStoreClient(config)
 
 
@@ -39,7 +38,7 @@ def main():
         args = parser.parse_args()
 
         # Setup logging based on verbosity
-        log_file_path = Path(".jiragen") / "jiragen.log"
+        log_file_path = get_data_dir() / "jiragen.log"
         setup_logging(args.verbose, log_file_path)
         litellm.set_verbose = args.verbose
 
@@ -292,15 +291,6 @@ if __name__ == "__main__":
     main()
 
 
-# TODO : jiragen init
-# [llm]
-# model = openai/gpt-4o
-# temperature = 0.7
-# max_tokens = 2000
-
-# [vector_store]
-# path = .jiragen/vector_store
-
 # TODO : fix multiple .jiragen locations issue
 # TODO : fetch optimisation & fix bug
 # TODO : Automatic title generation too
@@ -309,3 +299,4 @@ if __name__ == "__main__":
 # TODO : .gitignore
 # TODO : global ignore pathspec rules
 # TODO : performance optimization
+# TODO : post-commit hook for issue generation
