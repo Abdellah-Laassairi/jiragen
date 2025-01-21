@@ -62,3 +62,9 @@ class ConfigManager:
             self.config.set(section, key, value)
         with open(self.config_path, "w") as f:
             self.config.write(f)
+
+
+if __name__ == "__main__":
+    config = ConfigManager()
+    config.update_config("jiragen", username="jiragen", api_token="123")
+    print(config.config)

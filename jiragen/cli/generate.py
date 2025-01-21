@@ -12,6 +12,7 @@ from rich.prompt import Confirm, Prompt
 
 from jiragen.cli.nvim import open_in_neovim, setup_nvim_environment
 from jiragen.cli.upload import upload_command
+from jiragen.core.client import VectorStoreClient
 from jiragen.core.generator import GeneratorConfig, IssueGenerator, LLMConfig
 from jiragen.core.metadata import (
     IssueMetadata,
@@ -19,7 +20,6 @@ from jiragen.core.metadata import (
     IssuePriority,
     IssueType,
 )
-from jiragen.core.vector_store import VectorStoreClient
 
 console = Console()
 

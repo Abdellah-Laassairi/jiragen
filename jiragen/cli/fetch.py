@@ -18,8 +18,8 @@ from rich.progress import (
 from rich.table import Table
 from rich.text import Text
 
+from jiragen.core.client import VectorStoreClient, VectorStoreConfig
 from jiragen.core.config import ConfigManager
-from jiragen.core.vector_store import VectorStoreClient, VectorStoreConfig
 from jiragen.services.jira import JiraConfig, JiraDataManager, JiraFetchConfig
 
 console = Console()

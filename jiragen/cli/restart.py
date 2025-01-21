@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from jiragen.cli.kill import kill_command
-from jiragen.core.vector_store import VectorStoreClient
+from jiragen.core.client import VectorStoreClient
 
 console = Console()
 

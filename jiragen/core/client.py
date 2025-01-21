@@ -60,7 +60,9 @@ class VectorStoreClient:
     def start_service(self) -> None:
         """Start the vector store service"""
         try:
-            service_script = Path(__file__).parent / "vector_store_service.py"
+            service_script = (
+                Path(__file__).parent.parent / "services" / "vector_store.py"
+            )
             if not service_script.exists():
                 raise FileNotFoundError(
                     f"Service script not found at {service_script}"
@@ -86,10 +88,10 @@ class VectorStoreClient:
                     logger.error(f"Service stdout: {stdout.decode()}")
                     logger.error(f"Service stderr: {stderr.decode()}")
                     raise TimeoutError("Service failed to start")
-                time.sleep(0.1)
+                time.sleep(0.05)
 
             # Wait for service to initialize
-            time.sleep(2)
+            time.sleep(1)
 
             # Verify service is responding
             retries = 3

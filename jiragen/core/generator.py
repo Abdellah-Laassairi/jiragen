@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from litellm import completion
 from loguru import logger
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class LLMConfig(BaseModel):
@@ -16,24 +16,22 @@ class LLMConfig(BaseModel):
     temperature: float = 0.7
     top_p: float = 0.95
 
-    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True, extra="allow", validate_assignment=True
+    )
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        # Set api_base based on model provider
-        model_provider = self.model.split("/")[0] if "/" in self.model else ""
-        if model_provider == "ollama":
-            self.api_base = "http://localhost:11434"
-        else:
-            self.api_base = None  # Use default OpenAI endpoint
+    @model_validator(mode="after")
+    def set_api_base(self) -> "LLMConfig":
+        """Proper V2 validator for api_base"""
+        if "/" in self.model:
+            provider = self.model.split("/")[0]
+            if provider == "ollama":
+                self.api_base = "http://localhost:11434"
+        return self
 
     def to_request_params(self) -> Dict[str, Any]:
-        params = {
-            "model": self.model,
-            "max_tokens": self.max_tokens,
-            "temperature": self.temperature,
-            "top_p": self.top_p,
-        }
+        params = self.model_dump()
+        params.pop("api_base", None)
         logger.debug(f"LLM parameters: {params}")
         return params
 
@@ -199,3 +197,8 @@ Generated ticket:"""
         except Exception as e:
             logger.error("Failed to generate ticket", exc_info=True)
             raise RuntimeError(f"Failed to generate ticket: {e}") from e
+
+
+if __name__ == "__main__":
+    config = LLMConfig()
+    print(config)

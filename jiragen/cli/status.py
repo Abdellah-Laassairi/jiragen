@@ -7,7 +7,7 @@ from loguru import logger
 from rich import print as rprint
 from rich.tree import Tree
 
-from jiragen.core.vector_store import VectorStoreClient
+from jiragen.core.client import VectorStoreClient
 
 
 def normalize_path(path: Path) -> Path:
