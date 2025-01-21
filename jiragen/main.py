@@ -134,7 +134,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Main parser
     parser = argparse.ArgumentParser(
-        description="jiragen - AI-powered JIRA ticket generator",
+        description="jiragen - AI-powered JIRA Issue generator",
         parents=[parent_parser],
     )
 
