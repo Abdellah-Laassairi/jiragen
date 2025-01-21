@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class LLMConfig(BaseModel):
-    model: str = "openai/gpt-4o"  # Default model name
+    model: str = "openai/gpt-4o-mini"  # Default model name
     api_base: Optional[str] = Field(
         default=None
     )  # API endpoint, set based on model

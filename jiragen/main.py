@@ -4,6 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
+import litellm
 from rich.console import Console
 
 from jiragen.cli.add import add_files_command
@@ -18,7 +19,7 @@ from jiragen.cli.status import status_command
 from jiragen.cli.upload import upload_command
 from jiragen.core.client import VectorStoreClient, VectorStoreConfig
 from jiragen.core.config import ConfigManager
-from jiragen.utils.logger import logger
+from jiragen.utils.logger import logger, setup_logging
 
 console = Console()
 
@@ -38,9 +39,9 @@ def main():
         args = parser.parse_args()
 
         # Setup logging based on verbosity
-        from jiragen.utils.logger import setup_logging
-
-        setup_logging(args.verbose)
+        log_file_path = Path(".jiragen") / "jiragen.log"
+        setup_logging(args.verbose, log_file_path)
+        litellm.set_verbose = args.verbose
 
         # Initialize config manager
         config_manager = ConfigManager()
@@ -290,8 +291,17 @@ def create_parser() -> argparse.ArgumentParser:
 if __name__ == "__main__":
     main()
 
-# TODO : Fix init
-# TODO : Fix cli & logs and clean it
+
+# TODO : jiragen init
+# [llm]
+# model = openai/gpt-4o
+# temperature = 0.7
+# max_tokens = 2000
+
+# [vector_store]
+# path = .jiragen/vector_store
+
+# TODO : fix multiple .jiragen locations issue
 # TODO : fetch optimisation & fix bug
 # TODO : Automatic title generation too
 # TODO : Fix component name and other metadata extraction

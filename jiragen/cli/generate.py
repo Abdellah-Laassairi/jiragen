@@ -41,7 +41,6 @@ def _setup_generator(
         model=model,
         temperature=temperature,
         max_tokens=max_tokens,
-        api_base="http://localhost:11434",
     )
     config = GeneratorConfig(template_path=template, llm_config=llm_config)
     generator = IssueGenerator(store, config)
