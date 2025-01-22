@@ -1,18 +1,93 @@
 """Status command for jiragen CLI."""
 
+import os
 from pathlib import Path
 from typing import Any, Dict, Optional, Set
 
 from loguru import logger
 from rich import print as rprint
+from rich.panel import Panel
+from rich.table import Table
 from rich.tree import Tree
 
-from jiragen.core.client import VectorStoreClient
+from jiragen.core.client import VectorStoreClient, VectorStoreConfig
+from jiragen.utils.data import get_runtime_dir
 
 
 def normalize_path(path: Path) -> Path:
     """Normalize path to remove double slashes and clean up root representation."""
     return path.absolute().resolve()
+
+
+def get_file_stats(files: Set[Path]) -> Dict[str, Any]:
+    """Get statistics about the files in the collection."""
+    total_size = 0
+    total_words = 0
+    total_lines = 0
+    file_types = {}
+
+    for file in files:
+        if file.exists():
+            # Get file size
+            size = os.path.getsize(file)
+            total_size += size
+
+            # Get file extension
+            ext = file.suffix.lower()
+            if ext:
+                file_types[ext] = file_types.get(ext, 0) + 1
+
+            # Count words and lines
+            try:
+                content = file.read_text()
+                words = len(content.split())
+                lines = len(content.splitlines())
+                total_words += words
+                total_lines += lines
+            except Exception as e:
+                logger.warning(f"Could not read file {file}: {e}")
+
+    return {
+        "total_size": total_size,
+        "total_words": total_words,
+        "total_lines": total_lines,
+        "file_types": file_types,
+        "num_files": len(files),
+    }
+
+
+def format_size(size: int) -> str:
+    """Format size in bytes to human readable format."""
+    for unit in ["B", "KB", "MB", "GB"]:
+        if size < 1024:
+            return f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size:.1f} TB"
+
+
+def print_stats_table(stats: Dict[str, Any], title: str) -> None:
+    """Print a table with collection statistics."""
+    table = Table(title=title, show_header=True, header_style="bold magenta")
+
+    # Add statistics
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", justify="right", style="green")
+
+    table.add_row("Total Files", str(stats["num_files"]))
+    table.add_row("Total Size", format_size(stats["total_size"]))
+    table.add_row("Total Words", f"{stats['total_words']:,}")
+    table.add_row("Total Lines", f"{stats['total_lines']:,}")
+
+    # Add file type distribution if any
+    if stats["file_types"]:
+        table.add_section()
+        table.add_row("File Types", "Count")
+        for ext, count in sorted(
+            stats["file_types"].items(), key=lambda x: x[1], reverse=True
+        ):
+            table.add_row(ext, str(count))
+
+    rprint(table)
 
 
 def print_tree_recursive(
@@ -132,36 +207,67 @@ def status_command(
 ) -> None:
     """Display vector store status with comprehensive validation."""
     try:
-        # Get tree data
-        tree_data = store.get_stored_files()
+        runtime_dir = get_runtime_dir()
 
-        # Create root node
-        root_label = "[bold]Vector DB Contents"
+        # Initialize both stores
+        codebase_store = VectorStoreClient(
+            VectorStoreConfig(
+                collection_name="codebase_content",
+                db_path=runtime_dir / "codebase_data" / "vector_db",
+            )
+        )
+        jira_store = VectorStoreClient(
+            VectorStoreConfig(
+                collection_name="jira_content",
+                db_path=runtime_dir / "jira_data" / "vector_db",
+            )
+        )
+
+        # Get tree data for both stores
+        codebase_data = codebase_store.get_stored_files()
+        jira_data = jira_store.get_stored_files()
+
+        # Create root nodes with emojis
+        codebase_root = Tree("🗂  [bold cyan]Codebase Vector DB Contents")
+        jira_root = Tree("📋 [bold magenta]JIRA Vector DB Contents")
+
         if compact:
-            root_label += " (Compact View)"
+            codebase_root.label += " (Compact View)"
+            jira_root.label += " (Compact View)"
         if depth is not None:
-            root_label += f" (Depth {depth})"
+            codebase_root.label += f" (Depth {depth})"
+            jira_root.label += f" (Depth {depth})"
 
-        root = Tree(root_label)
+        # Print tree structures
+        print_tree(
+            codebase_data, codebase_root, compact=compact, max_depth=depth
+        )
+        print_tree(jira_data, jira_root, compact=compact, max_depth=depth)
 
-        # Handle empty or invalid data gracefully
-        if not tree_data or not isinstance(tree_data, dict):
-            root.add("[yellow]No valid data available from vector store[/]")
-            rprint(root)
-            return
+        # Print both trees
+        rprint("\n")
+        rprint(Panel(codebase_root, border_style="cyan"))
+        rprint("\n")
+        rprint(Panel(jira_root, border_style="magenta"))
+        rprint("\n")
 
-        # Print tree structure
-        print_tree(tree_data, root, compact=compact, max_depth=depth)
-        rprint(root)
+        # Get and display statistics
+        codebase_files = codebase_data.get("files", set())
+        jira_files = jira_data.get("files", set())
 
-        # Show summary for valid data in compact mode
-        if compact and isinstance(tree_data, dict):
-            files = tree_data.get("files", set())
-            directories = tree_data.get("directories", set())
-            if isinstance(files, set) and isinstance(directories, set):
-                rprint(
-                    f"\nSummary: {len(files)} files in {len(directories)} directories"
-                )
+        if codebase_files or jira_files:
+            rprint(
+                Panel("[bold]📊 Collection Statistics[/]", border_style="green")
+            )
+
+            if codebase_files:
+                codebase_stats = get_file_stats(codebase_files)
+                print_stats_table(codebase_stats, "🗂  Codebase Collection")
+                rprint("\n")
+
+            if jira_files:
+                jira_stats = get_file_stats(jira_files)
+                print_stats_table(jira_stats, "📋 JIRA Collection")
 
     except Exception as e:
         logger.error(f"Error displaying status: {str(e)}")

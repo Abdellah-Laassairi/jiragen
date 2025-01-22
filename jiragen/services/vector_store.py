@@ -33,7 +33,7 @@ class VectorStoreService:
         self.running = False
         self.sock = None
         self.client = None
-        self.collection = None
+        self.collections = {}
         self.embedding_function = None
         self.initialized = False
         self.db_path = None
@@ -73,47 +73,54 @@ class VectorStoreService:
         """Initialize the vector store with the given configuration"""
         try:
             logger.debug("Starting store initialization")
-            if self.initialized:
-                logger.info("Store already initialized")
-                return
-
-            # Set up database path
-            self.db_path = self.runtime_dir / "db"
-            self.db_path.mkdir(parents=True, exist_ok=True)
-
-            # Initialize embedding function
-            device = "cpu"  # Always use CPU for stability
-            logger.debug(
-                f"Initializing embedding function with device: {device}"
-            )
-            self.embedding_function = (
-                embedding_functions.SentenceTransformerEmbeddingFunction(
-                    model_name=config.get(
-                        "embedding_model", "all-MiniLM-L6-v2"
-                    ),
-                    trust_remote_code=True,
-                    device=device,
-                )
-            )
-
-            # Initialize ChromaDB client
-            logger.debug(f"Initializing ChromaDB client at {self.db_path}")
-            self.client = chromadb.PersistentClient(
-                path=str(self.db_path),
-                settings=Settings(
-                    anonymized_telemetry=False,
-                    allow_reset=True,
-                    is_persistent=True,
-                ),
-            )
-
-            # Get or create collection
             collection_name = config.get(
                 "collection_name", "repository_content"
             )
+
+            if collection_name in self.collections and self.initialized:
+                logger.info(
+                    f"Collection {collection_name} already initialized"
+                )
+                return
+
+            # Set up database path if not already initialized
+            if not self.initialized:
+                self.db_path = Path(
+                    config.get("db_path", self.runtime_dir / "db")
+                )
+                self.db_path.mkdir(parents=True, exist_ok=True)
+
+                # Initialize embedding function
+                device = "cpu"  # Always use CPU for stability
+                logger.debug(
+                    f"Initializing embedding function with device: {device}"
+                )
+                self.embedding_function = (
+                    embedding_functions.SentenceTransformerEmbeddingFunction(
+                        model_name=config.get(
+                            "embedding_model", "all-MiniLM-L6-v2"
+                        ),
+                        trust_remote_code=True,
+                        device=device,
+                    )
+                )
+
+                # Initialize ChromaDB client
+                logger.debug(f"Initializing ChromaDB client at {self.db_path}")
+                self.client = chromadb.PersistentClient(
+                    path=str(self.db_path),
+                    settings=Settings(
+                        anonymized_telemetry=False,
+                        allow_reset=True,
+                        is_persistent=True,
+                    ),
+                )
+                self.initialized = True
+
+            # Get or create collection
             logger.debug(f"Getting/Creating collection: {collection_name}")
             try:
-                self.collection = self.client.get_collection(
+                collection = self.client.get_collection(
                     name=collection_name,
                     embedding_function=self.embedding_function,
                 )
@@ -124,14 +131,16 @@ class VectorStoreService:
                 logger.warning(
                     f"Collection not found, creating a new one: {e}"
                 )
-                self.collection = self.client.create_collection(
+                collection = self.client.create_collection(
                     name=collection_name,
                     embedding_function=self.embedding_function,
                 )
                 logger.info(f"Created new collection: {collection_name}")
 
-            self.initialized = True
-            logger.info("Vector store initialized successfully")
+            self.collections[collection_name] = collection
+            logger.info(
+                f"Collection {collection_name} initialized successfully"
+            )
 
         except Exception as e:
             logger.exception("Failed to initialize store")
@@ -141,8 +150,15 @@ class VectorStoreService:
         """Handle adding files to the vector store"""
         logger.debug("Handling add_files")
         try:
-            if not self.collection:
-                return {"error": "Collection not initialized"}
+            collection_name = params.get(
+                "collection_name", "repository_content"
+            )
+            collection = self.collections.get(collection_name)
+
+            if not collection:
+                return {
+                    "error": f"Collection {collection_name} not initialized"
+                }
 
             paths = [Path(p) for p in params["paths"]]
             added_files = set()
@@ -156,7 +172,7 @@ class VectorStoreService:
 
                         # Try to delete existing document first
                         try:
-                            self.collection.delete(ids=[file_id])
+                            collection.delete(ids=[file_id])
                         except Exception as e:
                             logger.debug(
                                 f"File not found in collection or error removing {path}: {e}"
@@ -164,7 +180,7 @@ class VectorStoreService:
                             pass
 
                         # Add the document
-                        self.collection.add(
+                        collection.add(
                             documents=[content],
                             metadatas=[{"file_path": str(path)}],
                             ids=[file_id],
@@ -186,8 +202,15 @@ class VectorStoreService:
         """Handle removing files from the vector store"""
         logger.debug("Handling remove_files")
         try:
-            if not self.collection:
-                return {"error": "Collection not initialized"}
+            collection_name = params.get(
+                "collection_name", "repository_content"
+            )
+            collection = self.collections.get(collection_name)
+
+            if not collection:
+                return {
+                    "error": f"Collection {collection_name} not initialized"
+                }
 
             paths = [Path(p) for p in params["paths"]]
             removed_files = set()
@@ -197,7 +220,7 @@ class VectorStoreService:
                     file_id = str(path)
                     # Try to delete the document
                     try:
-                        self.collection.delete(ids=[file_id])
+                        collection.delete(ids=[file_id])
                         removed_files.add(str(path))
                         logger.debug(f"Successfully removed file: {path}")
                     except Exception as e:
@@ -216,15 +239,24 @@ class VectorStoreService:
                 "Failed to remove files from vector store"
             ) from e
 
-    def handle_get_stored_files(self) -> Dict[str, Any]:
+    def handle_get_stored_files(
+        self, params: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle retrieving stored files information"""
         logger.debug("Handling get_stored_files")
         try:
-            result = {"files": set(), "directories": set()}
+            collection_name = params.get(
+                "collection_name", "repository_content"
+            )
+            collection = self.collections.get(collection_name)
 
-            if not self.collection:
-                logger.debug("No collection initialized")
-                return {"status": "success", "data": result}
+            if not collection:
+                return {
+                    "status": "success",
+                    "data": {"files": set(), "directories": set()},
+                }
+
+            result = {"files": set(), "directories": set()}
 
             try:
                 start_time = time.time()
@@ -235,7 +267,7 @@ class VectorStoreService:
                 collection_data = None
                 try:
                     with ThreadPoolExecutor(max_workers=1) as executor:
-                        future = executor.submit(self.collection.get)
+                        future = executor.submit(collection.get)
                         collection_data = future.result(
                             timeout=10
                         )  # 10 second timeout
@@ -291,15 +323,22 @@ class VectorStoreService:
     def handle_query_similar(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle querying similar documents"""
         try:
-            if not self.collection:
+            collection_name = params.get(
+                "collection_name", "repository_content"
+            )
+            collection = self.collections.get(collection_name)
+
+            if not collection:
+                logger.warning(f"Collection {collection_name} not initialized")
                 return {"status": "success", "data": []}
 
             text = params["text"]
             n_results = params.get("n_results", 5)
 
-            results = self.collection.query(
-                query_texts=[text], n_results=n_results
+            logger.debug(
+                f"Querying collection {collection_name} with text: {text}"
             )
+            results = collection.query(query_texts=[text], n_results=n_results)
 
             return {
                 "status": "success",
@@ -317,8 +356,12 @@ class VectorStoreService:
             }
 
         except Exception as e:
-            logger.exception("Failed to query similar documents")
-            raise RuntimeError("Failed to query similar documents") from e
+            logger.exception(
+                f"Failed to query similar documents from collection {collection_name}"
+            )
+            raise RuntimeError(
+                f"Failed to query similar documents: {str(e)}"
+            ) from e
 
     def handle_client(self, conn: socket.socket) -> None:
         """Handle a client connection"""
@@ -367,7 +410,7 @@ class VectorStoreService:
                 response = {"error": "Service not initialized"}
             elif command == "get_stored_files":
                 logger.debug("Received: get_stored_files command")
-                response = self.handle_get_stored_files()
+                response = self.handle_get_stored_files(params)
             elif command == "add_files":
                 response = self.handle_add_files(params)
             elif command == "remove_files":

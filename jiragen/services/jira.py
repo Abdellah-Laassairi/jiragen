@@ -727,11 +727,14 @@ class JiraDataManager:
 
                         # Add to vector store if provided
                         if vector_store is not None:
-                            # Verify this is a JIRA file before adding to jira_content
+                            # Verify this is a JIRA file before adding
                             if self._is_jira_file(md_path):
-                                vector_store.add_files(
-                                    [md_path], collection_name="jira_content"
-                                )
+                                try:
+                                    vector_store.add_files([md_path])
+                                except Exception as e:
+                                    logger.error(
+                                        f"Failed to add file to vector store: {e}"
+                                    )
                             else:
                                 logger.warning(
                                     f"Skipping non-JIRA file: {md_path}"

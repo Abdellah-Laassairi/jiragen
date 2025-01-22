@@ -6,6 +6,8 @@ from litellm import completion
 from loguru import logger
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from jiragen.core.client import VectorStoreClient, VectorStoreConfig
+
 
 class LLMConfig(BaseModel):
     model: str = "openai/gpt-4o-mini"  # Default model name
@@ -225,17 +227,29 @@ Generated ticket:"""
             template = self.config.template_path.read_text(encoding="utf-8")
             logger.debug(f"Loaded template of length: {len(template)}")
 
-            # Get relevant JIRA context
-            jira_docs = self.vector_store.query_similar(
-                message, collection_name="jira_content"
+            runtime_dir = self.vector_store.config.db_path.parent.parent
+
+            # Initialize and get JIRA context
+            jira_store = VectorStoreClient(
+                VectorStoreConfig(
+                    collection_name="jira_content",
+                    db_path=runtime_dir / "jira_data" / "vector_db",
+                )
             )
+            jira_store.initialize_store()  # Ensure collection is initialized
+            jira_docs = jira_store.query_similar(message)
             logger.info(f"Retrieved {len(jira_docs)} similar JIRA documents")
             jira_context = self._prepare_context(jira_docs, "JIRA")
 
-            # Get relevant codebase context
-            codebase_docs = self.vector_store.query_similar(
-                message, collection_name="codebase_content"
+            # Initialize and get codebase context
+            codebase_store = VectorStoreClient(
+                VectorStoreConfig(
+                    collection_name="codebase_content",
+                    db_path=runtime_dir / "codebase_data" / "vector_db",
+                )
             )
+            codebase_store.initialize_store()  # Ensure collection is initialized
+            codebase_docs = codebase_store.query_similar(message)
             logger.info(
                 f"Retrieved {len(codebase_docs)} similar codebase documents"
             )

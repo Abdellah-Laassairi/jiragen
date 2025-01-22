@@ -25,14 +25,14 @@ class VectorStoreConfig(BaseModel):
         embedding_model: Name of the sentence transformer model to use
         device: Device to run embeddings on ('cpu' or 'cuda')
         socket_path: Unix socket path for client-service communication
-        repo_path: Path to the repository root
+        db_path: Path to the vector store database
     """
 
     collection_name: str = "repository_content"
     embedding_model: str = "all-MiniLM-L6-v2"
-    repo_path: Path = Path.cwd()  # Default to current directory
     device: str = "cpu"  # Default to CPU for stability
     socket_path: Optional[Path] = None
+    db_path: Optional[Path] = None
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True, protected_namespaces=()
@@ -44,6 +44,14 @@ class VectorStoreConfig(BaseModel):
         if not self.socket_path:
             runtime_dir = get_runtime_dir()
             self.socket_path = runtime_dir / "vector_store.sock"
+
+        # Set db_path if not provided
+        if not self.db_path:
+            runtime_dir = get_runtime_dir()
+            if self.collection_name == "jira_content":
+                self.db_path = runtime_dir / "jira_data" / "vector_db"
+            else:
+                self.db_path = runtime_dir / "codebase_data" / "vector_db"
 
 
 class VectorStoreClient:
@@ -247,52 +255,15 @@ class VectorStoreClient:
                 "collection_name": self.config.collection_name,
                 "embedding_model": self.config.embedding_model,
                 "device": self.config.device,
+                "db_path": str(self.config.db_path),
             }
-
-            # Send initialization command
-            response = self.send_command("initialize", config_dict)
-            if response.get("status") != "success":
-                raise Exception(
-                    f"Failed to initialize store: {response.get('error', 'Unknown error')}"
-                )
-
-            # Verify store accessibility
-            retry_count = 3
-            while retry_count > 0:
-                try:
-                    test_response = self.send_command(
-                        "get_stored_files", timeout=5
-                    )
-                    if (
-                        isinstance(test_response, dict)
-                        and "data" in test_response
-                    ):
-                        data = test_response["data"]
-                        if (
-                            isinstance(data, dict)
-                            and "files" in data
-                            and "directories" in data
-                        ):
-                            logger.info(
-                                "Vector store initialized and verified successfully"
-                            )
-                            return
-                except Exception as e:
-                    logger.debug(
-                        f"Initialization verification attempt {4-retry_count}/3 failed: {e}"
-                    )
-
-                retry_count -= 1
-                if retry_count > 0:
-                    time.sleep(1)
-
-            raise Exception(
-                "Failed to verify store initialization state after retries"
-            )
-
+            self.send_command("initialize", params=config_dict)
+            logger.debug("Vector store initialized successfully")
         except Exception as e:
-            logger.exception(f"Failed to initialize store {str(e)}")
-            raise
+            logger.exception("Failed to initialize vector store")
+            raise Exception(
+                f"Failed to initialize vector store: {str(e)}"
+            ) from e
 
     def get_stored_files(self) -> Dict[str, Set[Path]]:
         """Get stored files with robust validation and error handling.
@@ -304,7 +275,9 @@ class VectorStoreClient:
         """
         try:
             response = self.send_command(
-                "get_stored_files", timeout=GET_FILES_TIMEOUT
+                "get_stored_files",
+                params={"collection_name": self.config.collection_name},
+                timeout=GET_FILES_TIMEOUT,
             )
 
             # Validate response structure
@@ -348,7 +321,12 @@ class VectorStoreClient:
         try:
             # logger.debug(f"Adding files: {paths}")
             response = self.send_command(
-                "add_files", {"paths": [str(p) for p in paths]}, timeout=60
+                "add_files",
+                {
+                    "paths": [str(p) for p in paths],
+                    "collection_name": self.config.collection_name,
+                },
+                timeout=60,
             )  # Longer timeout for file operations
 
             if not response or "data" not in response:
@@ -366,7 +344,12 @@ class VectorStoreClient:
         """Remove files from vector store"""
         try:
             response = self.send_command(
-                "remove_files", {"paths": [str(p) for p in paths]}, timeout=60
+                "remove_files",
+                {
+                    "paths": [str(p) for p in paths],
+                    "collection_name": self.config.collection_name,
+                },
+                timeout=60,
             )  # Longer timeout for file operations
 
             if not response or "data" not in response:
@@ -387,7 +370,11 @@ class VectorStoreClient:
         try:
             response = self.send_command(
                 "query_similar",
-                {"text": text, "n_results": n_results},
+                {
+                    "text": text,
+                    "n_results": n_results,
+                    "collection_name": self.config.collection_name,
+                },
                 timeout=60,
             )  # Longer timeout for query operations
 

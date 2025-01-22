@@ -19,18 +19,20 @@ from jiragen.cli.status import status_command
 from jiragen.cli.upload import upload_command
 from jiragen.core.client import VectorStoreClient, VectorStoreConfig
 from jiragen.core.config import ConfigManager
-from jiragen.utils.data import get_data_dir
+from jiragen.utils.data import get_data_dir, get_runtime_dir
 from jiragen.utils.logger import logger, setup_logging
 
 console = Console()
 
 
 def get_vector_store() -> VectorStoreClient:
-    """Initialize and return a VectorStoreClient instance."""
-    config = VectorStoreConfig(
-        repo_path=Path.cwd()
-    )  # Use current directory as repo path
-    return VectorStoreClient(config)
+    """Get vector store instance with appropriate configuration."""
+    runtime_dir = get_runtime_dir()
+    store_config = VectorStoreConfig(
+        collection_name="codebase_content",
+        db_path=runtime_dir / "codebase_data" / "vector_db",
+    )
+    return VectorStoreClient(store_config)
 
 
 def main():
@@ -292,6 +294,8 @@ def create_parser() -> argparse.ArgumentParser:
 if __name__ == "__main__":
     main()
 
+# TODO : improve jiragen status (codebase / jira content summary)
+# TODO : fix jiragen add . issue
 # TODO : split db collections into two
 # TODO : Fix component name and other metadata extraction
 

@@ -2,7 +2,6 @@
 
 import sys
 import time
-from pathlib import Path
 from typing import List
 
 from rich.console import Console
@@ -21,6 +20,7 @@ from rich.text import Text
 from jiragen.core.client import VectorStoreClient, VectorStoreConfig
 from jiragen.core.config import ConfigManager
 from jiragen.services.jira import JiraConfig, JiraDataManager, JiraFetchConfig
+from jiragen.utils.data import get_runtime_dir
 
 console = Console()
 
@@ -69,8 +69,9 @@ def fetch_command(
 
         # Initialize configurations
         jira_config = JiraConfig.from_config_manager(config_manager)
+        runtime_dir = get_runtime_dir()
         fetch_config = JiraFetchConfig(
-            output_dir=Path(".jiragen") / "jira_data", data_types=types
+            output_dir=runtime_dir / "jira_data" / "raw_data", data_types=types
         )
 
         # Create output directory
@@ -78,7 +79,8 @@ def fetch_command(
 
         # Initialize JIRA vector store
         jira_store_config = VectorStoreConfig(
-            repo_path=fetch_config.output_dir, collection_name="jira_content"
+            collection_name="jira_content",
+            db_path=runtime_dir / "jira_data" / "vector_db",
         )
         jira_store = VectorStoreClient(jira_store_config)
 
