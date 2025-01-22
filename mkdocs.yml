@@ -21,8 +21,6 @@ nav:
       - Overview: api/index.md
       - Core API: api/core.md
       - CLI API: api/cli.md
-      - Vector Store: api/vector_store.md
-      - LLM Integration: api/llm.md
   - 🤝 Contributing:
       - Contributing Guide: contributing.md
       - Code of Conduct: code-of-conduct.md
