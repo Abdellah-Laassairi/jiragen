@@ -343,19 +343,12 @@ class VectorStoreClient:
             logger.exception(f"Failed to get stored files {str(e)}")
             return {"files": set(), "directories": set()}
 
-    def add_files(
-        self, paths: List[Path], collection_name: Optional[str] = None
-    ) -> Set[Path]:
+    def add_files(self, paths: List[Path]) -> Set[Path]:
         """Add files to vector store"""
         try:
             # logger.debug(f"Adding files: {paths}")
-            params = {
-                "paths": [str(p) for p in paths],
-                "collection_name": collection_name
-                or self.config.collection_name,
-            }
             response = self.send_command(
-                "add_files", params, timeout=60
+                "add_files", {"paths": [str(p) for p in paths]}, timeout=60
             )  # Longer timeout for file operations
 
             if not response or "data" not in response:
@@ -388,22 +381,13 @@ class VectorStoreClient:
             raise Exception(f"Failed to remove files: {str(e)}") from e
 
     def query_similar(
-        self,
-        text: str,
-        n_results: int = 5,
-        collection_name: Optional[str] = None,
+        self, text: str, n_results: int = 5
     ) -> List[Dict[str, Any]]:
         """Query similar documents"""
         try:
-            params = {
-                "text": text,
-                "n_results": n_results,
-                "collection_name": collection_name
-                or self.config.collection_name,
-            }
             response = self.send_command(
                 "query_similar",
-                params,
+                {"text": text, "n_results": n_results},
                 timeout=60,
             )  # Longer timeout for query operations
 
