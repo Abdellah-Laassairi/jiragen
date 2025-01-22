@@ -180,8 +180,7 @@ class IssueGenerator:
         prompt = f"""You are an expert software engineer tasked with generating a JIRA ticket.
 Follow the template below exactly, filling in appropriate content based on the message and context.
 
-Template to follow:
-{template}
+
 
 ## Potentially Relevant JIRA context for ticket creation:
 {jira_context}
@@ -189,15 +188,18 @@ Template to follow:
 ## Potentially Relevant codebase context for ticket creation:
 {codebase_context}
 
-Using the previous context, generate a JIRA ticket for the following Issue:
-{message}
+
+Template to follow:
+{template}
 
 Instructions:
-1. Use the exact template structure provided above
-2. Generate comprehensive content while maintaining the template format
-3. Include technical details and implementation considerations from the context
-4. Ensure all acceptance criteria are specific and testable
-5. Reference relevant files and components from the context
+1. Use the exact template structure provided above.
+2. Generate comprehensive content while maintaining the template format.
+3. Include technical details and implementation considerations from the context.
+4. Ensure all acceptance criteria are specific and testable.
+
+Using the previous context, generate a JIRA ticket for the following Issue:
+{message}
 
 Generated ticket:"""
 
