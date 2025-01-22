@@ -1,6 +1,6 @@
 # JiraGen: Automated JIRA Issue Generation
 
-<p align="center">
+<p align="left">
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"/>
   </a>
@@ -13,7 +13,7 @@
 
 ## 🚀 Overview
 
-**Jiragen** is a CLI designed to automate the creation of JIRA Issues through the use of Local Large Language Models (LLMs). It leverages the power of Ollama and LiteLLM to provide context-aware issue generation, enabling efficient and effective interaction with JIRA. Full documentation is available [here](https://github.com/Abdellah-Laassairi/jiragen).
+**Jiragen** is a CLI designed to automate the creation of JIRA Issues through the use of Large Language Models (LLMs). It is fully integrated with JIRA API and your Local codebase accelerating jira issue creation and enabling developers to focus on other aspects of their projects. Full documentation is available [here](https://github.com/Abdellah-Laassairi/jiragen).
 
 ---
 
@@ -21,6 +21,7 @@
 
 - [Key Features](#key-features)
 - [Quick Start](#quick-start)
+- [Usage Examples](#usage-examples)
 - [Configuration Options](#configuration-options)
 - [Template Customization](#template-customization)
 - [Contributing](#contributing)
@@ -28,11 +29,12 @@
 
 ## 🌟 Key Features
 
-- 🧠 **Local LLM Integration**: Leverages Ollama and LiteLLM.
-- 🔍 **Context-Aware Issues**: Incorporates relevant context using Vector store integration for scalable context handling.
-- ✨ **Customizable Templates**: Adapt issue formats to your needs.
-- 🔧 **Metadata Extraction**: Automates technical details from codebases.
-- ⚙️ **Configurable Parameters**: Fine-tune the generation process.
+- 🧠 **Local LLM Integration**: Leverages Ollama (via LiteLLM) for local text generation
+- 🔍 **Context-Aware Issues**: Smart codebase analysis with vector store integration
+- 🎯 **Gitignore Support**: Respects .gitignore patterns when indexing codebase
+- ✨ **Customizable Templates**: Flexible issue templates for different needs
+- 🔧 **Smart Metadata Extraction**: Automatic extraction of issue type, priority, and labels
+- ⚙️ **Interactive Workflow**: Review and modify content before uploading
 
 ## ⚡ Quick Start
 
@@ -57,57 +59,76 @@ or export your OpenAI API key:
 export OPENAI_API_KEY="YOUR_API_KEY"
 ```
 
-### Command Line Interface
-
-JiraGen provides a powerful CLI for efficient ticket generation and management:
+### Basic Setup
 
 ```bash
-# Init
+# Initialize configuration
 jiragen init
 
-# Basic ticket generation
-jiragen generate "Implement user authentication system"
+# Index your codebase (respects .gitignore)
+jiragen add .
 
-# Generate with specific template
-jiragen generate -t templates/custom.txt "Add API rate limiting"
-
-# Generate with custom LLM configuration
-jiragen generate --model codellama --temperature 0.8 "Refactor database schema"
-
-# Status and management commands
-jiragen status                    # Display vector store status
-jiragen status --compact          # Show compact status view
-jiragen status --depth 2          # Limit directory tree depth
-
-# Vector store operations
-jiragen add path/to/files         # Add files to vector store
-jiragen rm path/to/files      # Remove files from vector store
+# Generate your first issue
+jiragen generate "Implement user authentication"
 ```
 
-### API Usage
+## 🎯 Usage Examples
 
-```python
-from jiragen import TicketGenerator, LLMConfig, GeneratorConfig
-from pathlib import Path
+### Codebase Indexing
 
-# Configure the generator
-config = GeneratorConfig(
-    template_path=Path("templates/jira_template.txt"),
-    llm_config=LLMConfig(model="llama2", api_base="http://localhost:11434"),
-)
+```bash
+# Add all files (respects .gitignore)
+jiragen add .
 
-# Initialize the generator
-generator = TicketGenerator(vector_store_client, config)
+# Add specific files or directories
+jiragen add src/main.py
 
-# Generate a ticket
-ticket = generator.generate("Implement user authentication using JWT")
+# Remove files
+jiragen rm src/deprecated/
+```
+
+### Issue Generation
+
+```bash
+# Basic generation
+jiragen generate "Add dark mode support"
+
+# With custom template and model
+jiragen generate "API rate limiting" \
+  --template templates/feature.md \
+  --model ollama/codellama
+
+# Generate and upload to JIRA
+jiragen generate "Fix memory leak" --upload --yes
+
+# Interactive editing
+jiragen generate "OAuth integration" --editor
+```
+
+### Status and Management
+
+```bash
+# View indexed files
+jiragen status
+jiragen status --compact
+jiragen status --depth 2
+
+# Fetch JIRA data
+jiragen fetch --types epics tickets
+
+# Restart vector store
+jiragen restart
 ```
 
 ## ⚙️ Configuration Options
 
-JiraGen supports a variety of configuration parameters to tailor ticket generation:
+JiraGen can be configured through:
+- Command-line arguments
+- Configuration file (`~/.jiragen/config.ini`)
+- Environment variables
 
 ```python
+# Python API configuration
 LLMConfig(
     model="llama2",  # Ollama model to use
     api_base="http://localhost:11434",  # Ollama endpoint
@@ -121,28 +142,31 @@ LLMConfig(
 
 Create templates to match your organization's needs:
 
-```text
-Title: {title}
-Type: {type}
-Priority: {priority}
+```markdown
+# {title}
 
-Description:
+## Description
 {description}
 
-Acceptance Criteria:
+## Acceptance Criteria
 {acceptance_criteria}
 
-Technical Implementation:
+## Technical Implementation
 {implementation_details}
+
+## Testing Strategy
+- Unit Tests
+- Integration Tests
+- E2E Tests
 ```
 
 ## 🤝 Contributing
 
 We ❤️ contributions! To contribute:
 
-1. Fork the repository.
-2. Create a feature branch.
-3. Submit a pull request with a detailed description of your changes.
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request with a detailed description
 
 For more details, refer to our [CONTRIBUTING.md](CONTRIBUTING.md).
 
