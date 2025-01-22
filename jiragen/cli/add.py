@@ -63,7 +63,9 @@ def _process_files(progress, task, expanded_paths, store) -> None:
             processed_count += 1
             progress.update(task, advance=1)
 
-        added_files = store.add_files(expanded_paths)
+        added_files = store.add_files(
+            expanded_paths, collection_name="codebase_content"
+        )
 
         elapsed_time = time.time() - start_time
         speed = processed_count / elapsed_time if elapsed_time > 0 else 0

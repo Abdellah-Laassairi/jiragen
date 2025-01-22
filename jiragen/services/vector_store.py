@@ -145,6 +145,29 @@ class VectorStoreService:
                 return {"error": "Collection not initialized"}
 
             paths = [Path(p) for p in params["paths"]]
+            collection_name = params.get(
+                "collection_name", "repository_content"
+            )
+
+            # Get or create the specified collection
+            try:
+                collection = self.client.get_collection(
+                    name=collection_name,
+                    embedding_function=self.embedding_function,
+                )
+                logger.info(
+                    f"Retrieved existing collection: {collection_name}"
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Collection not found, creating a new one: {e}"
+                )
+                collection = self.client.create_collection(
+                    name=collection_name,
+                    embedding_function=self.embedding_function,
+                )
+                logger.info(f"Created new collection: {collection_name}")
+
             added_files = set()
 
             for path in paths:
@@ -156,7 +179,7 @@ class VectorStoreService:
 
                         # Try to delete existing document first
                         try:
-                            self.collection.delete(ids=[file_id])
+                            collection.delete(ids=[file_id])
                         except Exception as e:
                             logger.debug(
                                 f"File not found in collection or error removing {path}: {e}"
@@ -164,7 +187,7 @@ class VectorStoreService:
                             pass
 
                         # Add the document
-                        self.collection.add(
+                        collection.add(
                             documents=[content],
                             metadatas=[{"file_path": str(path)}],
                             ids=[file_id],
@@ -296,10 +319,24 @@ class VectorStoreService:
 
             text = params["text"]
             n_results = params.get("n_results", 5)
-
-            results = self.collection.query(
-                query_texts=[text], n_results=n_results
+            collection_name = params.get(
+                "collection_name", "repository_content"
             )
+
+            # Get the specified collection
+            try:
+                collection = self.client.get_collection(
+                    name=collection_name,
+                    embedding_function=self.embedding_function,
+                )
+                logger.info(
+                    f"Retrieved collection for query: {collection_name}"
+                )
+            except Exception as e:
+                logger.warning(f"Collection not found: {e}")
+                return {"status": "success", "data": []}
+
+            results = collection.query(query_texts=[text], n_results=n_results)
 
             return {
                 "status": "success",
