@@ -20,7 +20,7 @@ Initialize JiraGen configuration and create necessary directories.
 jiragen init
 ```
 
-This command will create the `.jiragen` directory and initialize the configuration file.
+This command will initialize the configuration file.
 
 ### generate
 
@@ -138,11 +138,11 @@ Output example:
 └──────────────────────────────────┘
 ```
 
-The fetched data is stored in the `.jiragen/jira_data` directory, organized by type:
+The fetched data is stored in the runtime directory followed by `jira_data`, organized by type:
 
-- `.jiragen/jira_data/epics/`
-- `.jiragen/jira_data/tickets/`
-- `.jiragen/jira_data/components/`
+- `jira_data/epics/`
+- `jira_data/tickets/`
+- `jira_data/components/`
 
 Each item is stored in both JSON and Markdown formats for easy viewing and processing.
 
@@ -160,13 +160,46 @@ Options:
 
 ### add
 
-Add files to the vector store database.
+Add files to the vector store database. Supports .gitignore patterns and recursive directory scanning.
 
 ```bash
 jiragen add PATH [PATH...]
 
 Arguments:
-  PATH               : One or more files to add to the database
+  PATH               : One or more files or directories to add to the database
+                      Use "." to add all files in current directory recursively
+                      Use "*" to add all files in current directory only
+                      Use specific paths for individual files or directories
+
+Examples:
+# Add all files recursively (respects .gitignore)
+jiragen add .
+
+# Add specific files
+jiragen add src/main.py tests/test_api.py
+
+# Add all files in a specific directory
+jiragen add src/
+
+# Add all Python files in current directory
+jiragen add *.py
+```
+
+The command will:
+1. Respect .gitignore patterns when scanning for files
+2. Show a progress bar during processing
+3. Display a tree view of added files
+4. Show processing statistics (files/second)
+5. Skip directories and only process files
+
+Output example:
+```
+📁 Added Files
+├── src/main.py
+├── src/utils/helper.py
+└── tests/test_api.py
+
+Successfully added 3 files (52.7 files/second)
 ```
 
 ### rm (remove)
@@ -263,9 +296,11 @@ JIRAGEN_TEMPLATE_DIR    # Template directory path
 
 ## Data Storage
 
-JiraGen stores its data in the following locations:
+JiraGen stores its data following the XDG Base Directory specification:
 
-- `.jiragen/`: Main configuration and data directory
-  - `config.ini`: Configuration file
-  - `jira_data/`: JIRA fetched data
-  - `vector_store/`: Vector database for context storage
+### Unix-like Systems (Linux, macOS)
+
+```
+~/.config/jiragen/           # Configuration directory
+└── config.ini              # Main configuration file
+```

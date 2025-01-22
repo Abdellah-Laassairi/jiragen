@@ -31,7 +31,6 @@ This will:
 2. Guide you through configuring:
    - JIRA connection settings
    - LLM preferences
-   - Vector store location
 
 You can accept the defaults by pressing Enter or customize each setting.
 
@@ -48,7 +47,7 @@ export JIRAGEN_DEFAULT_PROJECT="PROJECT"
 export JIRAGEN_DEFAULT_ASSIGNEE="username"
 
 # LLM Settings
-export JIRAGEN_LLM_MODEL="openai/gpt-4o"
+export JIRAGEN_LLM_MODEL="gpt-4"
 export JIRAGEN_LLM_TEMPERATURE="0.7"
 export JIRAGEN_LLM_MAX_TOKENS="2000"
 
@@ -61,38 +60,62 @@ export XDG_DATA_HOME="~/.local/share"   # Unix-like systems
 
 ### 1. Initialize JiraGen
 
-First, initialize JiraGen in your project directory:
+First, initialize JiraGen:
 
 ```bash
 jiragen init
 ```
 
-This will create a `.jiragen` directory with the following structure:
+This will create the following directory structure following the XDG Base Directory specification:
+
+**Unix-like Systems (Linux, macOS)**:
 ```
-.jiragen/
-├── config.ini
-├── templates/
-│   └── default.md
-└── vector_store/
+~/.config/jiragen/           # Configuration directory
+├── config.ini              # Main configuration file
+└── templates/             # Custom templates
+    └── default.md
+
+~/.local/share/jiragen/     # Data directory
+├── vector_store/          # Vector database storage
+├── jira_data/            # JIRA fetched data
+│   ├── epics/           # Epic data
+│   ├── tickets/         # Ticket data
+│   └── components/      # Component data
+└── jiragen.log          # Application logs
+```
+
+**Windows**:
+```
+%APPDATA%\jiragen\          # Configuration directory
+├── config.ini              # Main configuration file
+└── templates/             # Custom templates
+    └── default.md
+
+%LOCALAPPDATA%\jiragen\     # Data directory
+├── vector_store/          # Vector database storage
+├── jira_data/            # JIRA fetched data
+│   ├── epics/           # Epic data
+│   ├── tickets/         # Ticket data
+│   └── components/      # Component data
+└── jiragen.log          # Application logs
 ```
 
 ### 2. Configure JIRA Settings
 
-Edit `.jiragen/config.ini` to add your JIRA credentials:
+Edit the configuration file (`~/.config/jiragen/config.ini` on Unix-like systems or `%APPDATA%\jiragen\config.ini` on Windows):
 
 ```ini
 [jira]
 url = https://your-domain.atlassian.net
 username = your-email@example.com
 api_token = your-api-token
+default_project = PROJECT
+default_assignee = username
 
 [llm]
-model = openai/gpt-4o
+model = gpt-4
 temperature = 0.7
 max_tokens = 2000
-
-[vector_store]
-path = .jiragen/vector_store
 ```
 
 You can also use environment variables:
@@ -111,9 +134,30 @@ jiragen add .
 ```
 
 This will:
-1. Scan your codebase
-2. Create embeddings for relevant files
-3. Store them in the vector store
+1. Scan your codebase recursively
+2. Respect .gitignore patterns (skipping ignored files)
+3. Create embeddings for relevant files
+4. Store them in the vector store
+
+You can also:
+- Add specific files: `jiragen add src/main.py tests/test_api.py`
+- Add a specific directory: `jiragen add src/`
+- Add files matching a pattern: `jiragen add *.py`
+
+The command will show:
+- Progress bar during processing
+- Tree view of added files
+- Processing statistics (files/second)
+
+Example output:
+```
+📁 Added Files
+├── src/main.py
+├── src/utils/helper.py
+└── tests/test_api.py
+
+Successfully added 3 files (52.7 files/second)
+```
 
 ## Basic Usage
 
@@ -124,7 +168,7 @@ jiragen generate "Add dark mode support"
 ```
 
 This will:
-1. Search your codebase for relevant context
+1. Search your staged jira data and codebase content for relevant context
 2. Generate a detailed ticket description
 3. Open it in your editor for review
 4. Extract metadata (issue type, priority, labels)
@@ -163,7 +207,9 @@ JiraGen comes with a default template that structures tickets with:
 
 ### Custom Templates
 
-Create custom templates in `.jiragen/templates/`:
+Create custom templates in the templates directory:
+- Unix-like: `~/.config/jiragen/templates/`
+- Windows: `%APPDATA%\jiragen\templates\`
 
 ```markdown
 # {title}

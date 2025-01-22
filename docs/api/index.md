@@ -1,72 +1,64 @@
-# API Documentation
+# API Reference
 
-Welcome to JiraGen's API documentation. This section provides detailed information about JiraGen's components and how to use them programmatically.
+JiraGen provides a Python API for programmatic access to its functionality. This section covers the core modules and their usage.
 
-## Architecture Overview
+## Core Modules
 
-```mermaid
-graph TD
-    A[CLI Commands] --> B[Core Components]
-    B --> C[Vector Store]
-    B --> D[Generator]
-    B --> E[Metadata]
-    B --> F[Config]
-    C --> G[Embeddings DB]
-    D --> H[LLM Service]
-    E --> I[JIRA API]
-```
+- `jiragen.core`: Core functionality and base classes
+- `jiragen.services`: Integration services (JIRA, Vector Store)
+- `jiragen.cli`: Command-line interface implementation
+- `jiragen.utils`: Utility functions and helpers
 
-## Component Overview
-
-!!! info "Core Components"
-    - **Vector Store**: Manages code embeddings for semantic search
-    - **Generator**: Handles AI-powered ticket generation
-    - **Metadata**: Manages JIRA issue metadata and validation
-    - **Config**: Handles application configuration
-
-!!! info "CLI Components"
-    - **Generate**: Creates JIRA tickets with AI assistance
-    - **Add**: Indexes codebase into vector store
-    - **Init**: Sets up configuration and directories
-    - **Upload**: Handles JIRA issue creation
-
-## Quick Links
-
-- [Core API Reference](core.md): Core components documentation
-- [CLI API Reference](cli.md): CLI components documentation
-- [Getting Started Guide](../getting-started.md): Installation and basic usage
-
-## Example Usage
-
-Here's a simple example of using JiraGen's API to generate and upload a ticket:
+## Basic Usage
 
 ```python
-from jiragen.core.client import VectorStoreClient
-from jiragen.cli.generate import generate_issue
-from jiragen.cli.upload import upload_command
+from jiragen import JiraGen
+from jiragen.core import Generator
+from jiragen.services import JiraClient
 
-# Initialize vector store
-store = VectorStoreClient()
+# Initialize JiraGen
+jira_gen = JiraGen()
 
-# Generate ticket content
-result = generate_issue(
-    store=store, message="Add dark mode support", model="openai/gpt-4o", upload=True
+# Generate an issue
+issue = jira_gen.generate(
+    title="Add dark mode support", template="feature.md", model="gpt-4", temperature=0.7
 )
 
-if result:
-    print("✨ Ticket generated and uploaded successfully!")
+# Upload to JIRA
+issue_key = jira_gen.upload(issue)
+print(f"Created issue: {issue_key}")
 ```
 
-## API Stability
+## Configuration
 
-!!! note "Versioning"
-    JiraGen follows semantic versioning. The API is considered stable for all releases with version >= 1.0.0.
+```python
+from jiragen import Config
 
-!!! warning "Beta Features"
-    Features marked as beta may change in minor releases. They are marked with a `(beta)` tag in the documentation.
+# Load configuration
+config = Config.load()
 
-## Need Help?
+# Update settings
+config.jira.url = "https://your-domain.atlassian.net"
+config.jira.username = "your-email@example.com"
+config.jira.api_token = "your-api-token"
 
-- Check out our [Contributing Guide](../contributing.md)
-- Open an issue on [GitHub](https://github.com/Abdellah-Laassairi/jiragen/issues)
-- Join our community discussions
+# Save changes
+config.save()
+```
+
+## Vector Store Operations
+
+```python
+from jiragen.services import VectorStore
+
+# Initialize vector store
+store = VectorStore()
+
+# Add files
+store.add_files(["src/main.py", "tests/test_api.py"])
+
+# Search for context
+results = store.search("authentication implementation", limit=5)
+```
+
+See the following sections for detailed documentation on each module.

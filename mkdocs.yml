@@ -9,13 +9,20 @@ nav:
   - 🏠 Home: index.md
   - 📚 User Guide:
       - 🚀 Getting Started: getting-started.md
-      - 🔧 CLI Reference: cli.md
+      - 🔧 CLI Reference:
+          - Overview: cli/index.md
+          - Basic Commands: cli/basic.md
+          - Issue Generation: cli/generate.md
+          - Codebase Management: cli/codebase.md
+          - JIRA Integration: cli/jira.md
       - 📝 Templates: templates.md
       - ⚙️ Configuration: configuration.md
   - 💻 API Reference:
       - Overview: api/index.md
       - Core API: api/core.md
       - CLI API: api/cli.md
+      - Vector Store: api/vector_store.md
+      - LLM Integration: api/llm.md
   - 🤝 Contributing:
       - Contributing Guide: contributing.md
       - Code of Conduct: code-of-conduct.md

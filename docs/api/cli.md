@@ -45,17 +45,57 @@ This section documents the command-line interface components of JiraGen. These c
 ## Add Command
 
 !!! abstract "Overview"
-    The Add command indexes your codebase into the vector store for context-aware ticket generation.
+    The Add command indexes your codebase into the vector store for context-aware ticket generation. It supports recursive directory scanning and respects .gitignore patterns.
 
 !!! warning "Large Codebases"
     For large codebases, the indexing process may take some time. The command shows a progress bar and provides detailed statistics upon completion.
 
+!!! tip "Gitignore Support"
+    The command automatically respects .gitignore patterns in your repository. This includes:
+    - Standard .gitignore patterns
+    - Custom patterns in your repository's .gitignore
+    - Common version control directories (.git)
+
 ### add_files_command
 
-::: jiragen.cli.add.add_files_command
-    rendering:
-      show_root_heading: true
-      show_source: false
+The main function that handles adding files to the vector store. It provides:
+- Recursive directory scanning
+- .gitignore pattern support
+- Progress tracking
+- File processing statistics
+- Tree view of added files
+
+```python
+def add_files_command(store, paths: List[str]) -> None:
+    """Add files to the vector database, respecting .gitignore patterns.
+
+    Args:
+        store: The vector store client instance
+        paths: List of file paths to add. Can include:
+               - Individual files
+               - Directories (will be scanned recursively)
+               - Glob patterns ("*", "**", etc.)
+    """
+```
+
+### Usage Examples
+
+```python
+from jiragen.cli.add import add_files_command
+from jiragen.core.client import VectorStoreClient
+
+# Initialize vector store
+store = VectorStoreClient()
+
+# Add all files in current directory (respects .gitignore)
+add_files_command(store, ["."])
+
+# Add specific files
+add_files_command(store, ["src/main.py", "tests/test_api.py"])
+
+# Add all files in a directory
+add_files_command(store, ["src/"])
+```
 
 ## Init Command
 
