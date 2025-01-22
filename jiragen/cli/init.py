@@ -65,27 +65,6 @@ def prompt_for_config() -> dict:
         value = console.input(f"{prompt}: ")
         config[("llm", field)] = value if value.strip() else default
 
-    # Vector Store Configuration
-    console.print("\n[bold cyan]Vector Store Configuration:[/]")
-    vector_store_fields = {
-        "path": (
-            "Vector store path (default: .jiragen/vector_store)",
-            ".jiragen/vector_store",
-        ),
-    }
-
-    for field, (prompt, default) in vector_store_fields.items():
-        env_var = f"JIRAGEN_VECTOR_STORE_{field.upper()}"
-        if os.getenv(env_var):
-            config[("vector_store", field)] = os.getenv(env_var)
-            console.print(
-                f"[green]Using {field} from environment variable {env_var}[/]"
-            )
-            continue
-
-        value = console.input(f"{prompt}: ")
-        config[("vector_store", field)] = value if value.strip() else default
-
     return config
 
 
@@ -103,9 +82,6 @@ def validate_config(config: configparser.ConfigParser) -> bool:
             "model",
             "temperature",
             "max_tokens",
-        },
-        "vector_store": {
-            "path",
         },
     }
 

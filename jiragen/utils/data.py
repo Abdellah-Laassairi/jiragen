@@ -46,4 +46,16 @@ def get_runtime_dir() -> Path:
     else:
         base = Path("/tmp")
 
-    return (base / "jiragen").resolve()
+    jiragen_runtime = (base / "jiragen").resolve()
+
+    # Ensure the directory exists with proper permissions
+    if not jiragen_runtime.exists():
+        jiragen_runtime.mkdir(parents=True, mode=0o700)
+    elif not jiragen_runtime.is_dir():
+        jiragen_runtime.unlink()
+        jiragen_runtime.mkdir(mode=0o700)
+
+    # Ensure proper permissions even if directory already exists
+    jiragen_runtime.chmod(0o700)
+
+    return jiragen_runtime

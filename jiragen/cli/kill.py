@@ -3,16 +3,18 @@
 import os
 import signal
 import subprocess
-from pathlib import Path
+import time
 
 from loguru import logger
+
+from jiragen.utils.data import get_runtime_dir
 
 
 def find_service_pid() -> list[int]:
     """Find the PID of the vector store service process."""
     try:
-        # Use ps to find python processes running vector_store_service.py
-        cmd = ["pgrep", "-f", "vector_store_service.py"]
+        # Use ps to find python processes running vector_store.py
+        cmd = ["pgrep", "-f", "vector_store.py"]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode == 0 and result.stdout:
             return [int(pid) for pid in result.stdout.splitlines()]
@@ -25,8 +27,8 @@ def find_service_pid() -> list[int]:
 def kill_command() -> None:
     """Kill the vector store service."""
     try:
-        # Get runtime directory
-        runtime_dir = Path.home() / ".jiragen"
+        # Get runtime directory from utils
+        runtime_dir = get_runtime_dir()
         socket_path = runtime_dir / "vector_store.sock"
         lock_file = runtime_dir / "vector_store.lock"
 
@@ -54,8 +56,6 @@ def kill_command() -> None:
                 logger.debug(f"Failed to send kill command: {e}")
 
         # Wait a bit for graceful shutdown
-        import time
-
         time.sleep(1)
 
         # Kill remaining processes
@@ -91,6 +91,14 @@ def kill_command() -> None:
                     logger.debug(f"Removed {file_path.name}")
                 except Exception as e:
                     logger.error(f"Error removing {file_path.name}: {e}")
+
+        # Try to remove runtime directory if empty
+        try:
+            if runtime_dir.exists() and not any(runtime_dir.iterdir()):
+                runtime_dir.rmdir()
+                logger.debug("Removed empty runtime directory")
+        except Exception as e:
+            logger.debug(f"Could not remove runtime directory: {e}")
 
         logger.info("Vector store service killed successfully")
     except Exception as e:

@@ -624,6 +624,19 @@ class JiraDataManager:
             dir_path.mkdir(parents=True, exist_ok=True)
         return dir_path
 
+    def _is_jira_file(self, path: Path) -> bool:
+        """
+        Check if a file is a JIRA-related file based on its path.
+
+        Args:
+            path: Path to check
+
+        Returns:
+            bool: True if the file is JIRA-related, False otherwise
+        """
+        jira_dirs = {"epics", "tickets", "components"}
+        return any(jira_dir in path.parts for jira_dir in jira_dirs)
+
     def _save_json(self, data: Dict[str, Any], filepath: Path) -> None:
         """
         Save data as JSON with proper error handling.
@@ -714,7 +727,15 @@ class JiraDataManager:
 
                         # Add to vector store if provided
                         if vector_store is not None:
-                            vector_store.add_files([md_path])
+                            # Verify this is a JIRA file before adding to jira_content
+                            if self._is_jira_file(md_path):
+                                vector_store.add_files(
+                                    [md_path], collection_name="jira_content"
+                                )
+                            else:
+                                logger.warning(
+                                    f"Skipping non-JIRA file: {md_path}"
+                                )
 
                         processed_count += 1
 

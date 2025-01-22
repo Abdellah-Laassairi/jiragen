@@ -78,8 +78,7 @@ class VectorStoreService:
                 return
 
             # Set up database path
-            repo_path = Path(config["repo_path"])
-            self.db_path = repo_path / ".jiragen" / "vector_store"
+            self.db_path = self.runtime_dir / "db"
             self.db_path.mkdir(parents=True, exist_ok=True)
 
             # Initialize embedding function
@@ -89,7 +88,9 @@ class VectorStoreService:
             )
             self.embedding_function = (
                 embedding_functions.SentenceTransformerEmbeddingFunction(
-                    model_name=config.get("model_name", "all-MiniLM-L6-v2"),
+                    model_name=config.get(
+                        "embedding_model", "all-MiniLM-L6-v2"
+                    ),
                     trust_remote_code=True,
                     device=device,
                 )

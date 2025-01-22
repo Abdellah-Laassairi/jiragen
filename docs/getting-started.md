@@ -4,10 +4,57 @@ This guide will help you get up and running with JiraGen.
 
 ## Installation
 
-Install JiraGen using pip:
+First, install Jiragen using pip:
 
 ```bash
 pip install jiragen
+```
+
+## Initial Setup
+
+### Configuration
+
+Run the initialization command to set up Jiragen:
+
+```bash
+jiragen init
+```
+
+This will:
+1. Create the necessary directories following XDG Base Directory specification:
+   - Configuration directory:
+     - Linux/macOS: `~/.config/jiragen/`
+     - Windows: `%APPDATA%\jiragen\`
+   - Data directory:
+     - Linux/macOS: `~/.local/share/jiragen/`
+     - Windows: `%LOCALAPPDATA%\jiragen\`
+2. Guide you through configuring:
+   - JIRA connection settings
+   - LLM preferences
+   - Vector store location
+
+You can accept the defaults by pressing Enter or customize each setting.
+
+### Environment Variables
+
+For automated setup, you can use environment variables:
+
+```bash
+# JIRA Settings
+export JIRAGEN_URL="https://your-domain.atlassian.net"
+export JIRAGEN_USERNAME="your-email@example.com"
+export JIRAGEN_API_TOKEN="your-api-token"
+export JIRAGEN_DEFAULT_PROJECT="PROJECT"
+export JIRAGEN_DEFAULT_ASSIGNEE="username"
+
+# LLM Settings
+export JIRAGEN_LLM_MODEL="openai/gpt-4o"
+export JIRAGEN_LLM_TEMPERATURE="0.7"
+export JIRAGEN_LLM_MAX_TOKENS="2000"
+
+# Optional: Custom paths
+export XDG_CONFIG_HOME="~/.config"      # Unix-like systems
+export XDG_DATA_HOME="~/.local/share"   # Unix-like systems
 ```
 
 ## Configuration

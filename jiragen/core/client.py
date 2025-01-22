@@ -4,12 +4,11 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set
 
 from loguru import logger
 from pydantic import BaseModel, ConfigDict
 
-from jiragen.core.config import get_data_dir
 from jiragen.utils.data import get_runtime_dir
 
 MAX_RETRIES = 3
@@ -19,10 +18,21 @@ BUFFER_SIZE = 16384  # 16KB buffer size
 
 
 class VectorStoreConfig(BaseModel):
-    repo_path: Path = get_data_dir()
+    """Configuration for the vector store client and service.
+
+    Attributes:
+        collection_name: Default collection name
+        embedding_model: Name of the sentence transformer model to use
+        device: Device to run embeddings on ('cpu' or 'cuda')
+        socket_path: Unix socket path for client-service communication
+        repo_path: Path to the repository root
+    """
+
     collection_name: str = "repository_content"
     embedding_model: str = "all-MiniLM-L6-v2"
+    repo_path: Path = Path.cwd()  # Default to current directory
     device: str = "cpu"  # Default to CPU for stability
+    socket_path: Optional[Path] = None
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True, protected_namespaces=()
@@ -30,17 +40,25 @@ class VectorStoreConfig(BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        # Ensure repo_path is expanded
-        self.repo_path = self.repo_path.expanduser()
+        # Set socket_path if not provided
+        if not self.socket_path:
+            runtime_dir = get_runtime_dir()
+            self.socket_path = runtime_dir / "vector_store.sock"
 
 
 class VectorStoreClient:
     def __init__(self, config: VectorStoreConfig):
         self.config = config
-        self.runtime_dir = get_runtime_dir()
-        self.socket_path = self.runtime_dir / "vector_store.sock"
         self.ensure_service_running()
         self.initialize_store()
+
+    @property
+    def socket_path(self) -> Path:
+        return self.config.socket_path
+
+    @property
+    def runtime_dir(self) -> Path:
+        return self.socket_path.parent
 
     def ensure_service_running(self) -> None:
         """Ensure the vector store service is running"""
@@ -125,7 +143,6 @@ class VectorStoreClient:
         """Restart the vector store service."""
         try:
             config = {
-                "repo_path": str(self.config.repo_path),
                 "collection_name": self.config.collection_name,
                 "model_name": self.config.embedding_model,
             }
@@ -216,7 +233,6 @@ class VectorStoreClient:
                         sock.close()
                     except Exception as e:
                         logger.warning(f"Failed to close socket: {e}")
-                        pass
 
     def initialize_store(self) -> None:
         """Initialize the vector store with initialization state verification.
@@ -228,7 +244,6 @@ class VectorStoreClient:
         """
         try:
             config_dict = {
-                "repo_path": str(self.config.repo_path),
                 "collection_name": self.config.collection_name,
                 "embedding_model": self.config.embedding_model,
                 "device": self.config.device,

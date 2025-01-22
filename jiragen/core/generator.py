@@ -97,6 +97,16 @@ class LiteLLMClient:
 
 
 class IssueGenerator:
+    """Generator for creating JIRA tickets using both JIRA and codebase context.
+
+    Uses RAG (Retrieval Augmented Generation) to find relevant context from both
+    JIRA history and codebase, then generates a ticket following a template.
+
+    Attributes:
+        vector_store: Vector store client for retrieving similar documents
+        config: Generator configuration
+    """
+
     def __init__(
         self,
         vector_store: "VectorStoreClient",
@@ -106,9 +116,21 @@ class IssueGenerator:
         self.config = config
         logger.info(f"Initialized IssueGenerator with config: {config}")
 
-    def _prepare_context(self, similar_docs: List[Dict[str, Any]]) -> str:
-        """Prepare context from similar documents with length limit."""
-        logger.debug(f"Preparing context from {len(similar_docs)} documents")
+    def _prepare_context(
+        self, similar_docs: List[Dict[str, Any]], context_type: str
+    ) -> str:
+        """Prepare context from similar documents with length limit.
+
+        Args:
+            similar_docs: List of similar documents with their content and metadata
+            context_type: Type of context being prepared ('JIRA' or 'codebase')
+
+        Returns:
+            Formatted string containing the context with file paths and content
+        """
+        logger.debug(
+            f"Preparing {context_type} context from {len(similar_docs)} documents"
+        )
         contexts = []
         total_length = 0
         skipped_docs = 0
@@ -135,18 +157,35 @@ class IssueGenerator:
 
         return "\n\n---\n\n".join(contexts)
 
-    def _create_prompt(self, message: str, context: str, template: str) -> str:
-        """Create a prompt incorporating the provided template directly."""
+    def _create_prompt(
+        self,
+        message: str,
+        jira_context: str,
+        codebase_context: str,
+        template: str,
+    ) -> str:
+        """Create a prompt incorporating both JIRA and codebase context.
+
+        Args:
+            message: User's request for the ticket
+            jira_context: Relevant context from JIRA history
+            codebase_context: Relevant context from the codebase
+            template: Template to follow for ticket generation
+
+        Returns:
+            Complete prompt for the LLM to generate a ticket
+        """
         prompt = f"""You are an expert software engineer tasked with generating a JIRA ticket.
 Follow the template below exactly, filling in appropriate content based on the message and context.
 
 Template to follow:
 {template}
 
+## Potentially Relevant JIRA context for ticket creation:
+{jira_context}
 
-
-Relevant context for ticket creation:
-{context}
+## Potentially Relevant codebase context for ticket creation:
+{codebase_context}
 
 Using the previous context, generate a JIRA ticket for the following Issue:
 {message}
@@ -164,7 +203,20 @@ Generated ticket:"""
         return prompt
 
     def generate(self, message: str) -> str:
-        """Generate a JIRA ticket using RAG and template-guided generation."""
+        """Generate a JIRA ticket using RAG and template-guided generation.
+
+        Retrieves relevant context from both JIRA history and codebase,
+        then uses an LLM to generate a ticket following the template.
+
+        Args:
+            message: User's request for the ticket
+
+        Returns:
+            Generated ticket content following the template
+
+        Raises:
+            RuntimeError: If ticket generation fails
+        """
         logger.info(f"Generating ticket for message: {message}")
         start_time = time.time()
 
@@ -173,14 +225,26 @@ Generated ticket:"""
             template = self.config.template_path.read_text(encoding="utf-8")
             logger.debug(f"Loaded template of length: {len(template)}")
 
-            # Get relevant context
-            similar_docs = self.vector_store.query_similar(message)
-            logger.info(f"Retrieved {len(similar_docs)} similar documents")
+            # Get relevant JIRA context
+            jira_docs = self.vector_store.query_similar(
+                message, collection_name="jira_content"
+            )
+            logger.info(f"Retrieved {len(jira_docs)} similar JIRA documents")
+            jira_context = self._prepare_context(jira_docs, "JIRA")
 
-            context = self._prepare_context(similar_docs)
+            # Get relevant codebase context
+            codebase_docs = self.vector_store.query_similar(
+                message, collection_name="codebase_content"
+            )
+            logger.info(
+                f"Retrieved {len(codebase_docs)} similar codebase documents"
+            )
+            codebase_context = self._prepare_context(codebase_docs, "codebase")
 
             # Generate ticket with template-guided prompt
-            prompt = self._create_prompt(message, context, template)
+            prompt = self._create_prompt(
+                message, jira_context, codebase_context, template
+            )
 
             with LiteLLMClient(self.config.llm_config) as llm:
                 ticket_content = llm.generate(

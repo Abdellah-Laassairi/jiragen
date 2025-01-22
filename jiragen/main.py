@@ -27,7 +27,9 @@ console = Console()
 
 def get_vector_store() -> VectorStoreClient:
     """Initialize and return a VectorStoreClient instance."""
-    config = VectorStoreConfig()  # Uses default path from get_data_dir()
+    config = VectorStoreConfig(
+        repo_path=Path.cwd()
+    )  # Use current directory as repo path
     return VectorStoreClient(config)
 
 
@@ -290,13 +292,13 @@ def create_parser() -> argparse.ArgumentParser:
 if __name__ == "__main__":
     main()
 
+# TODO : split db collections into two
+# TODO : Fix component name and other metadata extraction
 
-# TODO : fix multiple .jiragen locations issue
 # TODO : fetch optimisation & fix bug
 # TODO : Automatic title generation too
-# TODO : Fix component name and other metadata extraction
-# TODO : Vector database seperation
 # TODO : .gitignore
 # TODO : global ignore pathspec rules
 # TODO : performance optimization
 # TODO : post-commit hook for issue generation
+# TODO : Reranking optimization
