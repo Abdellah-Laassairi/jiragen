@@ -28,22 +28,32 @@ def _collect_paths(cwd: Path, path_str: str, gitignore) -> List[Path]:
     if path_str in (".", "**"):
         # Recursively collect all files
         for item in cwd.rglob("*"):
-            rel_path = item.relative_to(cwd)
-            if not gitignore.match_file(str(rel_path)):
-                collected_paths.append(item)
+            if item.is_file():  # Only add files, not directories
+                rel_path = item.relative_to(cwd)
+                if not gitignore.match_file(str(rel_path)):
+                    collected_paths.append(item)
     elif path_str == "*":
         # Only collect files in current directory
         for item in cwd.glob("*"):
-            rel_path = item.relative_to(cwd)
-            if not gitignore.match_file(str(rel_path)):
-                collected_paths.append(item)
+            if item.is_file():  # Only add files, not directories
+                rel_path = item.relative_to(cwd)
+                if not gitignore.match_file(str(rel_path)):
+                    collected_paths.append(item)
     else:
         # Handle specific path
         path = cwd / Path(path_str)
         if path.exists():
-            rel_path = path.relative_to(cwd)
-            if not gitignore.match_file(str(rel_path)):
-                collected_paths.append(path)
+            if path.is_file():
+                rel_path = path.relative_to(cwd)
+                if not gitignore.match_file(str(rel_path)):
+                    collected_paths.append(path)
+            elif path.is_dir():
+                # If it's a directory, collect all files recursively
+                for item in path.rglob("*"):
+                    if item.is_file():  # Only add files, not directories
+                        rel_path = item.relative_to(cwd)
+                        if not gitignore.match_file(str(rel_path)):
+                            collected_paths.append(item)
 
     return collected_paths
 
@@ -51,19 +61,11 @@ def _collect_paths(cwd: Path, path_str: str, gitignore) -> List[Path]:
 def _process_files(progress, task, expanded_paths, store) -> None:
     """Process the collected files and add them to the store."""
     start_time = time.time()
-    processed_count = 0
-
-    # Update progress bar total
-    progress.update(task, total=len(expanded_paths))
 
     if expanded_paths:
-        for _ in expanded_paths:
-            # Simulate processing file
-            time.sleep(0.01)  # Simulate processing delay
-            processed_count += 1
-            progress.update(task, advance=1)
-
+        # Add files to store
         added_files = store.add_files(expanded_paths)
+        processed_count = len(added_files)
 
         elapsed_time = time.time() - start_time
         speed = processed_count / elapsed_time if elapsed_time > 0 else 0
@@ -76,9 +78,12 @@ def _process_files(progress, task, expanded_paths, store) -> None:
         console.print("\n")
         console.print(root)
         console.print(
-            f"\n[green]Successfully added {len(added_files)} files "
+            f"\n[green]Successfully added {processed_count} files "
             f"({speed:.1f} files/second)[/]"
         )
+
+        # Update progress bar with actual count
+        progress.update(task, total=processed_count, completed=processed_count)
     else:
         console.print("\n[yellow]No files to add[/]")
 

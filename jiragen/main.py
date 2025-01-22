@@ -294,15 +294,10 @@ def create_parser() -> argparse.ArgumentParser:
 if __name__ == "__main__":
     main()
 
-# TODO : improve jiragen status (codebase / jira content summary)
-# TODO : fix jiragen add . issue
-# TODO : split db collections into two
 # TODO : Fix component name and other metadata extraction
-
 # TODO : fetch optimisation & fix bug
-# TODO : Automatic title generation too
-# TODO : .gitignore
-# TODO : global ignore pathspec rules
+# TODO : Automatic title generation
+# TODO : Global ignore pathspec rules
 # TODO : performance optimization
 # TODO : post-commit hook for issue generation
 # TODO : Reranking optimization
