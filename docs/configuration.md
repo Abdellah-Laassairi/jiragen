@@ -46,15 +46,12 @@ default_assignee = username
 ```ini
 [llm]
 model = openai/gpt-4o
+api_base = https://api.openai.com/v1
+api_token = your-api-token
 temperature = 0.7
 max_tokens = 2000
 ```
 
-### Vector Store Configuration
-```ini
-[vector_store]
-path = ~/.local/share/jiragen/vector_store  # Automatically set based on OS
-```
 
 ## Environment Variables
 
@@ -85,10 +82,9 @@ You can configure Jiragen using environment variables:
 
 The configuration values are loaded in the following order (later values override earlier ones):
 
-1. Default values
-2. Values from config file
-3. Environment variables
-4. Command-line arguments (when applicable)
+1. Default values from config file
+2. Environment variables
+3. Command-line arguments (when applicable)
 
 ## Initialization
 
@@ -113,8 +109,10 @@ Model name (default: openai/gpt-4o):
 Temperature (0.0-1.0, default: 0.7):
 Maximum tokens (default: 2000):
 
-Vector Store Configuration:
-Vector store path (default: ~/.local/share/jiragen/vector_store):
 ```
 
-Ensure that all configuration settings are properly documented and up-to-date.
+you can also specify a config file path with the --config flag
+
+```bash
+$ jiragen generate --config /path/to/config.ini
+```
