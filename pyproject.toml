@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "jiragen"
-version = "0.4.0"
+version = "0.5.0"
 dynamic = ["dependencies"]
 authors = [
     { name = "Abdellah Laassairi", email = "laassairi.abdellah@gmail.com" },
@@ -41,7 +41,7 @@ jiragen = "jiragen.main:main"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.4.0"
+version = "0.5.0"
 tag_format = "$version"
 version_scheme = "pep440"
 version_provider = "pep621"
