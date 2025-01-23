@@ -51,7 +51,7 @@ def main():
 
         # Commands that don't need vector store
         if args.command == "init":
-            init_command(config_manager.config_path)
+            init_command(args.config)
         elif args.command == "kill":
             kill_command()
         else:
@@ -85,20 +85,14 @@ def main():
                 template_path = args.template or str(
                     Path(__file__).parent / "templates" / "default.md"
                 )
-                model = args.model or "openai/gpt-4o"
-                temperature = (
-                    args.temperature if args.temperature is not None else 0.7
-                )
-                max_tokens = args.max_tokens or 2000
-
                 # Generate ticket content and metadata
                 result = generate_issue(
                     store=store,
                     message=args.message,
                     template_path=template_path,
-                    model=model,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
+                    model=args.model,
+                    temperature=args.temperature,
+                    max_tokens=args.max_tokens,
                     upload=args.upload,
                     yes=args.yes,
                 )
@@ -154,7 +148,7 @@ def create_parser() -> argparse.ArgumentParser:
         "--config",
         help="Path to config file",
         type=Path,
-        default=Path.home() / ".jiragen" / "config.ini",
+        default=None,
     )
 
     # Add command

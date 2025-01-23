@@ -14,6 +14,9 @@ class LLMConfig(BaseModel):
     api_base: Optional[str] = Field(
         default=None
     )  # API endpoint, set based on model
+    api_token: Optional[str] = Field(
+        default=None
+    )  # API token for authentication
     max_tokens: int = 2000
     temperature: float = 0.7
     top_p: float = 0.95
@@ -24,7 +27,11 @@ class LLMConfig(BaseModel):
 
     @model_validator(mode="after")
     def set_api_base(self) -> "LLMConfig":
-        """Proper V2 validator for api_base"""
+        """Set default API base if not provided, based on model provider"""
+        if self.api_base is not None:
+            # User provided custom API base, keep it as is
+            return self
+
         if "/" in self.model:
             provider = self.model.split("/")[0]
             if provider == "ollama":
@@ -34,6 +41,7 @@ class LLMConfig(BaseModel):
     def to_request_params(self) -> Dict[str, Any]:
         params = self.model_dump()
         params.pop("api_base", None)
+        params.pop("api_token", None)  # Remove API token from params
         logger.debug(f"LLM parameters: {params}")
         return params
 
@@ -42,7 +50,6 @@ class GeneratorConfig(BaseModel):
     template_path: Path
     llm_config: LLMConfig
     max_context_length: int = 128000
-
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
@@ -51,6 +58,8 @@ class LiteLLMClient:
         self.config = config
         # Configure litellm to use Ollama
         self.api_base = config.api_base
+        self.api_token = config.api_token
+
         logger.info(
             f"Initialized LiteLLM client with model: {config.model} at {config.api_base}"
         )
@@ -78,6 +87,7 @@ class LiteLLMClient:
             response = completion(
                 messages=[{"role": "user", "content": prompt}],
                 api_base=self.api_base,
+                api_key=self.api_token,
                 **params,
             )
 
@@ -261,12 +271,13 @@ Generated ticket:"""
             prompt = self._create_prompt(
                 message, jira_context, codebase_context, template
             )
-
-            with LiteLLMClient(self.config.llm_config) as llm:
+            llm_config = self.config.llm_config
+            # logger.debug(f"LLM config: {llm_config}") # TODO: Remove this
+            with LiteLLMClient(llm_config) as llm:
                 ticket_content = llm.generate(
                     prompt,
-                    temperature=self.config.llm_config.temperature,
-                    max_tokens=self.config.llm_config.max_tokens,
+                    temperature=llm_config.temperature,
+                    max_tokens=llm_config.max_tokens,
                 )
 
             generation_time = time.time() - start_time

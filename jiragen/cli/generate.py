@@ -13,6 +13,7 @@ from rich.prompt import Confirm, Prompt
 from jiragen.cli.nvim import open_in_neovim, setup_nvim_environment
 from jiragen.cli.upload import upload_command
 from jiragen.core.client import VectorStoreClient
+from jiragen.core.config import ConfigManager
 from jiragen.core.generator import GeneratorConfig, IssueGenerator, LLMConfig
 from jiragen.core.metadata import (
     IssueMetadata,
@@ -27,9 +28,9 @@ console = Console()
 def _setup_generator(
     store: VectorStoreClient,
     template_path: str,
-    model: str,
-    temperature: float,
-    max_tokens: int,
+    model: Optional[str] = None,
+    temperature: Optional[float] = None,
+    max_tokens: Optional[int] = None,
 ) -> tuple[GeneratorConfig, IssueGenerator, LLMConfig]:
     """Set up the generator with the given configuration."""
     template = Path(template_path)
@@ -37,14 +38,41 @@ def _setup_generator(
         raise FileNotFoundError(f"Template file not found: {template}")
 
     console.print("[bold]Setting up generator...[/]")
-    llm_config = LLMConfig(
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
+
+    logger.debug(
+        f"Overrides during generation: {model}, {temperature}, {max_tokens}"
     )
-    config = GeneratorConfig(template_path=template, llm_config=llm_config)
-    generator = IssueGenerator(store, config)
-    return config, generator, llm_config
+
+    # Load config from config file
+    config_manager = ConfigManager()
+    llm_config_dict = dict(config_manager.config["llm"])
+
+    # Override with command line arguments if provided
+    if model is not None:
+        llm_config_dict["model"] = model
+    if temperature is not None:
+        llm_config_dict["temperature"] = str(temperature)
+    if max_tokens is not None:
+        llm_config_dict["max_tokens"] = str(max_tokens)
+
+    try:
+        # Create LLMConfig from config values
+        llm_config = LLMConfig(
+            model=llm_config_dict["model"],
+            temperature=float(llm_config_dict["temperature"]),
+            max_tokens=int(llm_config_dict["max_tokens"]),
+            api_base=llm_config_dict.get("api_base", ""),
+            api_token=llm_config_dict.get("api_token", ""),
+        )
+        # logger.debug(f"LLM config During Setup: {llm_config}") # TODO: Remove this
+
+        config = GeneratorConfig(template_path=template, llm_config=llm_config)
+        generator = IssueGenerator(store, config)
+        return config, generator, llm_config
+    except ValueError as e:
+        raise ValueError(f"Invalid configuration value: {str(e)}") from e
+    except KeyError as e:
+        raise KeyError(f"Missing required configuration key: {str(e)}") from e
 
 
 def _generate_and_edit_content(
@@ -176,9 +204,9 @@ def generate_issue(
     store: VectorStoreClient,
     message: str,
     template_path: str,
-    model: str = "openai/gpt-4o",
-    temperature: float = 0.7,
-    max_tokens: int = 2000,
+    model: Optional[str] = None,
+    temperature: Optional[float] = None,
+    max_tokens: Optional[int] = None,
     upload: bool = False,
     yes: bool = False,
 ) -> Optional[Dict[str, Any]]:

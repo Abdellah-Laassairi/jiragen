@@ -96,6 +96,7 @@ class VectorStoreService:
                     f"Initializing embedding function with device: {device}"
                 )
                 self.embedding_function = (
+                    # https://huggingface.co/Alibaba-NLP/gte-modernbert-base
                     embedding_functions.SentenceTransformerEmbeddingFunction(
                         model_name=config.get(
                             "embedding_model", "all-MiniLM-L6-v2"
