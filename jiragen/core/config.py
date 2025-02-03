@@ -43,20 +43,17 @@ class ConfigManager:
                 f"No config path provided, using default: {config_path}"
             )
 
-        # Resolve home directory if present
         self.config_path = config_path.expanduser()
         self.config = configparser.ConfigParser()
         logger.info(
             f"Initializing ConfigManager with path: {self.config_path}"
         )
 
-        # Create config directory if it doesn't exist
         self.config_path.parent.mkdir(parents=True, exist_ok=True)
         logger.debug(
             f"Ensured config directory exists: {self.config_path.parent}"
         )
 
-        # Load existing config if it exists, otherwise create default
         if self.config_path.exists():
             logger.debug("Found existing config file, loading it")
             self.load_config()

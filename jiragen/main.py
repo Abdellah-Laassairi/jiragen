@@ -26,7 +26,6 @@ console = Console()
 
 
 def get_vector_store() -> VectorStoreClient:
-    """Get vector store instance with appropriate configuration."""
     runtime_dir = get_runtime_dir()
     store_config = VectorStoreConfig(
         collection_name="codebase_content",
@@ -123,13 +122,11 @@ def main():
 
 def create_parser() -> argparse.ArgumentParser:
     """Create and return the command line argument parser."""
-    # Create parent parser with common arguments
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument(
         "-v", "--verbose", action="store_true", help="Enable verbose logging"
     )
 
-    # Main parser
     parser = argparse.ArgumentParser(
         description="jiragen - AI-powered JIRA Issue generator",
         parents=[parent_parser],
@@ -137,7 +134,6 @@ def create_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # Init command
     init_parser = subparsers.add_parser(
         "init",
         help="Initialize jiragen in the current directory",
@@ -151,7 +147,6 @@ def create_parser() -> argparse.ArgumentParser:
         default=None,
     )
 
-    # Add command
     add_parser = subparsers.add_parser(
         "add",
         help="Add files to the vector store",
@@ -159,7 +154,6 @@ def create_parser() -> argparse.ArgumentParser:
     )
     add_parser.add_argument("files", nargs="+", type=Path, help="Files to add")
 
-    # Remove command
     rm_parser = subparsers.add_parser(
         "rm",
         help="Remove files from the vector store",
@@ -169,14 +163,12 @@ def create_parser() -> argparse.ArgumentParser:
         "files", nargs="+", type=Path, help="Files to remove"
     )
 
-    # Clean command
     clean_parser = subparsers.add_parser(
         "clean",
         help="Remove all files from the vector store",
         parents=[parent_parser],
     )
 
-    # Fetch command
     fetch_parser = subparsers.add_parser(
         "fetch",
         help="Search for relevant code snippets",
@@ -194,7 +186,6 @@ def create_parser() -> argparse.ArgumentParser:
         help="Filter by file types (e.g., epics, tickets, components). If not provided, fetches all types",
     )
 
-    # Status command
     status_parser = subparsers.add_parser(
         "status",
         help="Show vector store status",
@@ -204,21 +195,18 @@ def create_parser() -> argparse.ArgumentParser:
         "-c", "--compact", action="store_true", help="Show compact status"
     )
 
-    # Restart command
     restart_parser = subparsers.add_parser(
         "restart",
         help="Restart the vector store",
         parents=[parent_parser],
     )
 
-    # Kill command
     kill_parser = subparsers.add_parser(
         "kill",
         help="Kill the vector store service",
         parents=[parent_parser],
     )
 
-    # Generate command
     generate_parser = subparsers.add_parser(
         "generate",
         help="Generate a JIRA ticket",
@@ -256,7 +244,6 @@ def create_parser() -> argparse.ArgumentParser:
         help="Skip all confirmations and use defaults",
     )
 
-    # Upload command
     upload_parser = subparsers.add_parser(
         "upload",
         help="Upload a ticket to JIRA",
@@ -287,11 +274,3 @@ def create_parser() -> argparse.ArgumentParser:
 
 if __name__ == "__main__":
     main()
-
-# TODO : Fix component name and other metadata extraction
-# TODO : fetch optimisation & fix bug
-# TODO : Automatic title generation
-# TODO : Global ignore pathspec rules
-# TODO : performance optimization
-# TODO : post-commit hook for issue generation
-# TODO : Reranking optimization

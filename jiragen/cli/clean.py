@@ -14,19 +14,15 @@ from jiragen.utils.data import get_runtime_dir
 console = Console()
 
 
-def clean_command(store) -> None:
+def clean_command() -> None:
     """Remove all files from the vector database.
 
     This command will completely clean both the codebase and JIRA vector databases,
     removing all stored files. Use with caution as this operation cannot be undone.
-
-    Args:
-        store: The vector store client instance
     """
     try:
         runtime_dir = get_runtime_dir()
 
-        # Initialize both stores
         codebase_store = VectorStoreClient(
             VectorStoreConfig(
                 collection_name="codebase_content",
@@ -40,7 +36,6 @@ def clean_command(store) -> None:
             )
         )
 
-        # Get current stored files before cleaning
         codebase_files = codebase_store.get_stored_files()
         jira_files = jira_store.get_stored_files()
 
@@ -55,13 +50,11 @@ def clean_command(store) -> None:
             )
             return
 
-        # Create a confirmation prompt
         console.print(
             "[bold red]Warning: This will remove all files from both the codebase and JIRA vector databases.[/bold red]"
         )
         console.print("[bold red]This action cannot be undone.[/bold red]")
 
-        # Show what will be removed
         if files_to_remove_codebase:
             tree = Tree("[bold red]Codebase files to be removed")
             for file in sorted(files_to_remove_codebase):
@@ -74,12 +67,10 @@ def clean_command(store) -> None:
                 tree.add(f"[red]{file}[/red]")
             console.print(tree)
 
-        # Ask for confirmation
         if not Confirm.ask("\nDo you want to continue?"):
             console.print("[yellow]Operation cancelled.[/yellow]")
             return
 
-        # Remove files from both stores
         if files_to_remove_codebase:
             codebase_store.remove_files(list(files_to_remove_codebase))
             console.print("[green]✓ Cleaned codebase vector store[/green]")

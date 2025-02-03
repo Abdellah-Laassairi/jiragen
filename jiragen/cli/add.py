@@ -22,7 +22,16 @@ console = Console()
 
 
 def _collect_paths(cwd: Path, path_str: str, gitignore) -> List[Path]:
-    """Collect paths based on the given path string, respecting gitignore patterns."""
+    """Collect paths based on the given path string, respecting gitignore patterns.
+
+    Args:
+        cwd (Path): The current working directory.
+        path_str (str): The path string to collect files from.
+        gitignore: The gitignore object to match files against.
+
+    Returns:
+        List[Path]: A list of collected file paths.
+    """
     collected_paths = []
 
     if path_str in (".", "**"):
@@ -59,7 +68,14 @@ def _collect_paths(cwd: Path, path_str: str, gitignore) -> List[Path]:
 
 
 def _process_files(progress, task, expanded_paths, store) -> None:
-    """Process the collected files and add them to the store."""
+    """Process the collected files and add them to the store.
+
+    Args:
+        progress: The progress object to update.
+        task: The task object representing the current progress task.
+        expanded_paths: The list of file paths to process.
+        store: The store object to add files to.
+    """
     start_time = time.time()
 
     if expanded_paths:
@@ -89,7 +105,12 @@ def _process_files(progress, task, expanded_paths, store) -> None:
 
 
 def add_files_command(store, paths: List[str]) -> None:
-    """Add files to the vector database, respecting .gitignore patterns."""
+    """Add files to the vector database, respecting .gitignore patterns.
+
+    Args:
+        store: The store object to add files to.
+        paths (List[str]): A list of path strings to process.
+    """
     cwd = Path.cwd().resolve()
     expanded_paths = []
 

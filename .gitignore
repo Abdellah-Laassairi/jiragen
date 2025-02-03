@@ -1,6 +1,8 @@
 # Custom ignore rules
 .jiragen/
 .env*
+.html
+.xml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

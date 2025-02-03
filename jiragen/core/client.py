@@ -40,12 +40,11 @@ class VectorStoreConfig(BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        # Set socket_path if not provided
+
         if not self.socket_path:
             runtime_dir = get_runtime_dir()
             self.socket_path = runtime_dir / "vector_store.sock"
 
-        # Set db_path if not provided
         if not self.db_path:
             runtime_dir = get_runtime_dir()
             if self.collection_name == "jira_content":

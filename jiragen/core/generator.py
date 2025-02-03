@@ -56,7 +56,6 @@ class GeneratorConfig(BaseModel):
 class LiteLLMClient:
     def __init__(self, config: LLMConfig):
         self.config = config
-        # Configure litellm to use Ollama
         self.api_base = config.api_base
         self.api_token = config.api_token
 
@@ -235,13 +234,11 @@ Generated ticket:"""
         start_time = time.time()
 
         try:
-            # Load template
             template = self.config.template_path.read_text(encoding="utf-8")
             logger.debug(f"Loaded template of length: {len(template)}")
 
             runtime_dir = self.vector_store.config.db_path.parent.parent
 
-            # Initialize and get JIRA context
             jira_store = VectorStoreClient(
                 VectorStoreConfig(
                     collection_name="jira_content",
@@ -253,7 +250,6 @@ Generated ticket:"""
             logger.info(f"Retrieved {len(jira_docs)} similar JIRA documents")
             jira_context = self._prepare_context(jira_docs, "JIRA")
 
-            # Initialize and get codebase context
             codebase_store = VectorStoreClient(
                 VectorStoreConfig(
                     collection_name="codebase_content",
@@ -267,7 +263,6 @@ Generated ticket:"""
             )
             codebase_context = self._prepare_context(codebase_docs, "codebase")
 
-            # Generate ticket with template-guided prompt
             prompt = self._create_prompt(
                 message, jira_context, codebase_context, template
             )
