@@ -139,16 +139,26 @@ class IssueGenerator:
         Returns:
             Formatted string containing the context with file paths and content
         """
-        logger.debug(
-            f"Preparing {context_type} context from {len(similar_docs)} documents"
-        )
         contexts = []
         total_length = 0
         skipped_docs = 0
 
+        if similar_docs is None:
+            logger.debug(f"No relevant {context_type} context found")
+            return "No relevant context found"
+
+        logger.debug(
+            f"Preparing {context_type} context from {len(similar_docs)} documents"
+        )
+
         for doc in similar_docs:
-            content = doc["content"]
-            metadata = doc["metadata"]
+            logger.debug(f"Simlar doc for {context_type} is : {doc}")
+            content = doc.get("content")
+            metadata = doc.get("metadata")
+
+            if content is None or metadata is None:
+                logger.warning(f"Skipping invalid document: {doc}")
+                continue
 
             if total_length + len(content) > self.config.max_context_length:
                 skipped_docs += 1
@@ -186,6 +196,7 @@ class IssueGenerator:
         Returns:
             Complete prompt for the LLM to generate a ticket
         """
+        logger.info(f"Creating prompt for message: {message}")
         prompt = f"""You are an expert software engineer tasked with generating a JIRA ticket.
 Follow the template below exactly, filling in appropriate content based on the message and context.
 
@@ -256,7 +267,7 @@ Generated ticket:"""
                     db_path=runtime_dir / "codebase_data" / "vector_db",
                 )
             )
-            codebase_store.initialize_store()  # Ensure collection is initialized
+            codebase_store.initialize_store()  #
             codebase_docs = codebase_store.query_similar(message)
             logger.info(
                 f"Retrieved {len(codebase_docs)} similar codebase documents"
@@ -267,7 +278,6 @@ Generated ticket:"""
                 message, jira_context, codebase_context, template
             )
             llm_config = self.config.llm_config
-            # logger.debug(f"LLM config: {llm_config}") # TODO: Remove this
             with LiteLLMClient(llm_config) as llm:
                 ticket_content = llm.generate(
                     prompt,

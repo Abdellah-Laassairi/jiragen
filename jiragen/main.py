@@ -48,26 +48,19 @@ def main():
         # Initialize config manager
         config_manager = ConfigManager()
 
-        # Commands that don't need vector store
         if args.command == "init":
             init_command(args.config)
         elif args.command == "kill":
             kill_command()
         else:
-            # Get vector store instance for commands that need it
             store = get_vector_store()
 
-            # Dispatch to appropriate command
             if args.command == "add":
-                add_files_command(
-                    store, [str(f) for f in args.files]
-                )  # Convert Path to str
+                add_files_command(store, [str(f) for f in args.files])
             elif args.command == "rm":
-                rm_files_command(
-                    store, [str(f) for f in args.files]
-                )  # Convert Path to str
+                rm_files_command(store, [str(f) for f in args.files])
             elif args.command == "clean":
-                clean_command(store)
+                clean_command()
             elif args.command == "fetch":
                 if not hasattr(args, "types") or args.types is None:
                     args.types = []
@@ -76,15 +69,12 @@ def main():
             elif args.command == "status":
                 status_command(store, compact=args.compact)
             elif args.command == "restart":
-                restart_command(
-                    store=store
-                )  # Pass the store instance to restart_command
+                restart_command(store=store)
             elif args.command == "generate":
-                # Set default values if not provided
                 template_path = args.template or str(
                     Path(__file__).parent / "templates" / "default.md"
                 )
-                # Generate ticket content and metadata
+
                 result = generate_issue(
                     store=store,
                     message=args.message,
