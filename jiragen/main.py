@@ -40,12 +40,10 @@ def main():
         parser = create_parser()
         args = parser.parse_args()
 
-        # Setup logging based on verbosity
         log_file_path = get_data_dir() / "jiragen.log"
         setup_logging(args.verbose, log_file_path)
         litellm.set_verbose = args.verbose
 
-        # Initialize config manager
         config_manager = ConfigManager()
 
         if args.command == "init":
